@@ -1,0 +1,103 @@
+.top-form {
+    -fx-background-color: #fff;
+    -fx-border-color: #000;
+    -fx-border-width: .4px .4px .2px .4px;
+}
+.semi-top {
+    -fx-background-color: #efefef;
+    -fx-border-color: #000;
+    -fx-border-width: .2px .4px .4px .4px;
+}
+.close {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+.close:hover {
+    -fx-background-color: #ddd;
+}
+.minimize {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+.minimize:hover {
+    -fx-background-color: #ddd;
+}
+.nav1 {
+    -fx-background-color: linear-gradient(to bottom right,#ecdbc4 ,#eaa649);
+    -fx-background-radius: 5px;
+}
+.nav2 {
+    -fx-background-color: #fff;
+    -fx-background-radius: 5px;
+}
+.shadow {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 8,0,0,0);
+}
+.nav-btn {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-text-fill: #000;
+    -fx-border-width: 1px;
+    -fx-border-color: #ddd;
+}
+.nav-btn:hover {
+    -fx-background-color: #eaa649;
+    -fx-text-fill: #fff;
+    -fx-border-width: 0px;
+}
+.signOut {
+    -fx-background-color: #eaa649;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+}
+.signOut:hover {
+    -fx-background-color: #e8b58b;
+}
+.white-bg {
+    -fx-background-color: #fff;
+    -fx-background-radius: 6px;
+}
+.card {
+    -fx-background-color: #e8af61;
+    -fx-background-radius: 4px;
+}
+.add-btn {
+    -fx-background-color: #e8af61;
+    -fx-border-radius: 4px;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+    -fx-text-fill: #fff;
+}
+.add-btn:hover {
+    -fx-background-color: #e8b58b;
+}
+.search {
+    -fx-background-color: #f5f5f5;
+    -fx-border-width: 2px;
+    -fx-border-radius: 6px;
+    -fx-padding: 0px 0px 0px 30px;
+}
+.search:hover {
+    -fx-background-color: #fff;
+}
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: linear-gradient(to bottom right,#ecdbc4 ,#eaa649);
+    -fx-border-radius: 8px;
+    -fx-border-width: 2px;
+    -fx-padding: 0px;
+}
+.table-view .table-column {
+    -fx-alignment: CENTER;
+}
+.table-view .column-header-background {
+    -fx-background-color: linear-gradient(to bottom right, #eabb7a,#eaa649);
+    -fx-background-radius: 8px 8px 0px 0px;
+}
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-side: 40px;
+}
+.table-view .column-header .label {
+    -fx-text-fill: #fff;
+}
