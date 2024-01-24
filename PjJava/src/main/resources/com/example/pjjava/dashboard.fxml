@@ -77,22 +77,22 @@
                                         <String fx:value="shadow" />
                                     </styleClass>
                                     <children>
-                                        <Button fx:id="dashboardBtn" layoutX="15.0" layoutY="39.0" mnemonicParsing="false" prefHeight="46.0" prefWidth="169.0" styleClass="nav-btn" stylesheets="@dashboard.css" text="Dashboard">
+                                        <Button fx:id="dashboardBtn" layoutX="15.0" layoutY="39.0" mnemonicParsing="false" onAction="#switchForm" prefHeight="46.0" prefWidth="169.0" styleClass="nav-btn" stylesheets="@dashboard.css" text="Dashboard">
                                             <font>
                                                 <Font size="14.0" />
                                             </font>
                                         </Button>
-                                        <Button fx:id="availableFDBtn" layoutX="15.0" layoutY="95.0" mnemonicParsing="false" prefHeight="46.0" prefWidth="169.0" styleClass="nav-btn" stylesheets="@dashboard.css" text="Available Foods/Drinks">
+                                        <Button fx:id="availableFDBtn" layoutX="15.0" layoutY="95.0" mnemonicParsing="false" onAction="#switchForm" prefHeight="46.0" prefWidth="169.0" styleClass="nav-btn" stylesheets="@dashboard.css" text="Available Foods/Drinks">
                                             <font>
                                                 <Font size="14.0" />
                                             </font>
                                         </Button>
-                                        <Button fx:id="orderBtn" layoutX="15.0" layoutY="151.0" mnemonicParsing="false" prefHeight="46.0" prefWidth="169.0" styleClass="nav-btn" stylesheets="@dashboard.css" text="Orders">
+                                        <Button fx:id="orderBtn" layoutX="15.0" layoutY="151.0" mnemonicParsing="false" onAction="#switchForm" prefHeight="46.0" prefWidth="169.0" styleClass="nav-btn" stylesheets="@dashboard.css" text="Orders">
                                             <font>
                                                 <Font size="14.0" />
                                             </font>
                                         </Button>
-                                        <Button fx:id="logout" layoutX="15.0" layoutY="370.0" mnemonicParsing="false" styleClass="signOut" stylesheets="@dashboard.css">
+                                        <Button fx:id="logout" layoutX="15.0" layoutY="370.0" mnemonicParsing="false" onAction="#logout" styleClass="signOut" stylesheets="@dashboard.css">
                                             <graphic>
                                                 <FontAwesomeIconView fill="WHITE" glyphName="SIGN_OUT" size="2em" />
                                             </graphic>
@@ -221,7 +221,7 @@
                                                 <ComboBox fx:id="availableFDProductStatus" layoutX="110.0" layoutY="196.0" prefHeight="26.0" prefWidth="167.0" promptText="Choose:" />
                                                 <Button fx:id="availableFDAddBtn" layoutX="39.0" layoutY="291.0" mnemonicParsing="false" prefHeight="49.0" prefWidth="87.0" styleClass="add-btn" stylesheets="@dashboard.css" text="Add" />
                                                 <Button fx:id="availableFDUpdateBtn" layoutX="170.0" layoutY="291.0" mnemonicParsing="false" prefHeight="49.0" prefWidth="87.0" styleClass="add-btn" stylesheets="@dashboard.css" text="Update" />
-                                                <Button fx:id="availableFDClearBtn" layoutX="40.0" layoutY="372.0" mnemonicParsing="false" prefHeight="49.0" prefWidth="87.0" styleClass="add-btn" stylesheets="@dashboard.css" text="Clear" />
+                                                <Button fx:id="availableFDClearBtn" layoutX="39.0" layoutY="379.0" mnemonicParsing="false" prefHeight="49.0" prefWidth="87.0" styleClass="add-btn" stylesheets="@dashboard.css" text="Clear" />
                                                 <Button fx:id="availableFDDeleteBtn" layoutX="170.0" layoutY="379.0" mnemonicParsing="false" prefHeight="49.0" prefWidth="87.0" styleClass="add-btn" stylesheets="@dashboard.css" text="Delete" />
                                             </children>
                                         </AnchorPane>

@@ -64,6 +64,9 @@ public class SignInController implements Initializable {
             } else {
                 try (ResultSet resultSet = preparedStatement.executeQuery();) {
                     if (resultSet.next()) {
+
+                        data.username = username.getText();
+
                         alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Information Message");
                         alert.setHeaderText(null);
