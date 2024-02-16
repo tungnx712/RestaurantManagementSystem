@@ -3,6 +3,8 @@ package com.example.pjjava;
 import dao.JDBCConnect;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -44,7 +46,7 @@ public class DashboardController implements Initializable {
     private TableColumn<Categories, String> availableFDColProductPrice;
 
     @FXML
-    private TableColumn<Categories, String> availableFDColProductStatus;
+    private TableColumn<Categories, String> availableFDColProductAvailability;
 
     @FXML
     private TableColumn<Categories, String> availableFDColProductType;
@@ -55,8 +57,8 @@ public class DashboardController implements Initializable {
     @FXML
     private AnchorPane availableFDForm;
 
-    @FXML
-    private TextField availableFDProductID;
+//    @FXML
+//    private TextField availableFDProductID;
 
     @FXML
     private TextField availableFDProductName;
@@ -212,6 +214,7 @@ public class DashboardController implements Initializable {
                     "    -fx-border-width: 1px;");
 
             availableFDShowData();
+            availableFDSearchData();
 
         } else if (event.getSource() == orderBtn) {
             orderForm.setVisible(true);
@@ -285,7 +288,7 @@ public class DashboardController implements Initializable {
     }
 
     // AVAILABLE FOODS/DRINKS
-    private String[] categories = {"Foods", "Drinks"};
+    private String[] categories = {"foods", "drinks"};
 
     public void availableFDType() {
         List<String> listType = new ArrayList<>();
@@ -300,12 +303,12 @@ public class DashboardController implements Initializable {
 
     // CRUD MENU -------------------------------
     // SET PARAM FOR CATEGORIES
-    public static void setParmForCategories(Categories categories, PreparedStatement preparedStatement) throws SQLException {
-        preparedStatement.setString(1, categories.getDishName());
-        preparedStatement.setString(2, categories.getPrice());
-        preparedStatement.setString(3, categories.getAvailability());
-        preparedStatement.setString(4, categories.getType());
-    }
+//    public static void setParamForCategories(Categories categories, PreparedStatement preparedStatement) throws SQLException {
+//        preparedStatement.setString(1, categories.getDishName());
+//        preparedStatement.setString(2, categories.getPrice());
+//        preparedStatement.setString(3, categories.getAvailability());
+//        preparedStatement.setString(4, categories.getType());
+//    }
 
     // ADD
     public void availableFDAdd() {
@@ -325,7 +328,7 @@ public class DashboardController implements Initializable {
                     || availableFDProductType.getSelectionModel() == null
             ) {
                 alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error!");
+                alert.setTitle("Error");
                 alert.setHeaderText(null);
                 alert.setContentText("Please fill fields");
                 alert.showAndWait();
@@ -396,9 +399,10 @@ public class DashboardController implements Initializable {
 
         availableFDColProductID.setCellValueFactory(new PropertyValueFactory<>("dishID"));
         availableFDColProductName.setCellValueFactory(new PropertyValueFactory<>("dishName"));
-        availableFDColProductType.setCellValueFactory(new PropertyValueFactory<>("type"));
-        availableFDColProductPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
-        availableFDColProductStatus.setCellValueFactory(new PropertyValueFactory<>("availability"));
+        availableFDColProductPrice.setCellValueFactory(new PropertyValueFactory<>("availability"));
+        availableFDColProductAvailability.setCellValueFactory(new PropertyValueFactory<>("type"));
+        availableFDColProductType.setCellValueFactory(new PropertyValueFactory<>("price"));
+
 
         availableFDTableView.setItems(availableFDList);
 
@@ -414,12 +418,181 @@ public class DashboardController implements Initializable {
 
     }
 
+    // SELECT AVAILABLE THE FIELDS
+    public void availableFDSelect() {
+        Categories cateData = availableFDTableView.getSelectionModel().getSelectedItem();
+
+        int num = availableFDTableView.getSelectionModel().getSelectedIndex();
+
+        if (num < 0) {
+            return;
+        }
+
+        availableFDProductName.setText(cateData.getDishName());
+        availableFDProductPrice.setText(cateData.getAvailability());
+        availableFDProductAvailability.setText(cateData.getType());
+    }
+
+    // UPDATE
+    public void availableFDUpdate() {
+        String sql = "UPDATE categories SET dish_name = '"+availableFDProductName.getText()+"', " +
+                "price = '"+availableFDProductPrice.getText()+"', " +
+                "availability = '"+availableFDProductAvailability.getText()+"', " +
+                "type = '"+availableFDProductType.getSelectionModel().getSelectedItem()+"'" +
+                "WHERE dish_name = '"+availableFDProductName.getText()+"'";
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(sql))
+        {
+
+            Alert alert;
+
+            if (availableFDProductName.getText().isEmpty()
+                    || availableFDProductPrice.getText().isEmpty()
+                    || availableFDProductAvailability.getText().isEmpty()
+                    || availableFDProductType.getSelectionModel() == null
+            ) {
+                alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Please fill fields");
+                alert.showAndWait();
+            }
+            else {
+                alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Confirm");
+                alert.setHeaderText(null);
+                alert.setContentText("Update");
+                Optional<ButtonType> optional = alert.showAndWait();
+
+                if (optional.get().equals(ButtonType.OK)) {
+                    preparedStatement.executeUpdate();
+
+                    alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Update");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Updated");
+                    alert.showAndWait();
+
+                    // TO SHOW DATA
+                    availableFDShowData();
+                    // TO CLEAR THE FIELDS
+                    availableFDClear();
+                }
+                else {
+                    alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Cancel");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Cancelled");
+                    alert.showAndWait();
+                }
+            }
+
+
+        }
+        catch (SQLException e)
+        {
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    // DELETE
+    public void availableFDDelete() {
+        String sql = "DELETE FROM categories WHERE dish_name = '"+availableFDProductName.getText()+"'";
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql))
+        {
+
+            Alert alert;
+
+            if (availableFDProductName.getText().isEmpty()
+                    || availableFDProductPrice.getText().isEmpty()
+                    || availableFDProductAvailability.getText().isEmpty()
+                    || availableFDProductType.getSelectionModel() == null
+            ) {
+                alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Please fill fields");
+                alert.showAndWait();
+            }
+            else {
+                alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Confirm");
+                alert.setHeaderText(null);
+                alert.setContentText("Update");
+                Optional<ButtonType> optional = alert.showAndWait();
+
+                if (optional.get().equals(ButtonType.OK)) {
+                    preparedStatement.executeUpdate();
+
+                    alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Delete");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Deleted");
+                    alert.showAndWait();
+
+                    // TO SHOW DATA
+                    availableFDShowData();
+                    // TO CLEAR THE FIELDS
+                    availableFDClear();
+                }
+                else {
+                    alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Cancel");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Cancelled");
+                    alert.showAndWait();
+                }
+            }
+
+
+        }
+        catch (SQLException e)
+        {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    // SEARCH
+    public void availableFDSearchData() {
+        FilteredList<Categories> filter = new FilteredList<>(availableFDList, e -> true);
+        availableFDSearch.textProperty().addListener((observableValue, newValue, oldValue) -> {
+
+            filter.setPredicate(predicateCatagories -> {
+
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+
+                String searchKey = newValue.toLowerCase();
+
+                if (predicateCatagories.getDishName().toLowerCase().contains(searchKey))
+                {
+                    return true;
+                } else
+                {
+                    return false;
+                }
+            });
+        });
+
+        SortedList<Categories> sortedList = new SortedList<>(filter);
+
+        sortedList.comparatorProperty().bind(availableFDTableView.comparatorProperty());
+
+        availableFDTableView.setItems(sortedList);
+
+    }
+
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         displayUsername();
         availableFDType();
-
         availableFDShowData();
     }
 }
