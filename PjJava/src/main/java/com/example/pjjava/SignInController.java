@@ -68,7 +68,7 @@ public class SignInController implements Initializable {
                         data.username = username.getText();
 
                         alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Information Message");
+                        alert.setTitle("Success");
                         alert.setHeaderText(null);
                         alert.setContentText("Successfully Login!");
                         alert.showAndWait();

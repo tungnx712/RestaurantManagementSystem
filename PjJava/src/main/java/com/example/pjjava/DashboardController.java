@@ -1,5 +1,6 @@
 package com.example.pjjava;
 
+import dao.JDBCConnect;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -10,17 +11,22 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 public class DashboardController implements Initializable {
     @FXML
-private Button availableFDAddBtn;
+    private Button availableFDAddBtn;
 
     @FXML
     private Button availableFDBtn;
@@ -29,19 +35,19 @@ private Button availableFDAddBtn;
     private Button availableFDClearBtn;
 
     @FXML
-    private TableColumn<?, ?> availableFDColProductID;
+    private TableColumn<Categories, String> availableFDColProductID;
 
     @FXML
-    private TableColumn<?, ?> availableFDColProductName;
+    private TableColumn<Categories, String> availableFDColProductName;
 
     @FXML
-    private TableColumn<?, ?> availableFDColProductPrice;
+    private TableColumn<Categories, String> availableFDColProductPrice;
 
     @FXML
-    private TableColumn<?, ?> availableFDColProductStatus;
+    private TableColumn<Categories, String> availableFDColProductStatus;
 
     @FXML
-    private TableColumn<?, ?> availableFDColProductType;
+    private TableColumn<Categories, String> availableFDColProductType;
 
     @FXML
     private Button availableFDDeleteBtn;
@@ -59,13 +65,19 @@ private Button availableFDAddBtn;
     private TextField availableFDProductPrice;
 
     @FXML
+    private TextField availableFDProductAvailability;
+
+    @FXML
     private ComboBox<String> availableFDProductStatus;
 
     @FXML
-    private ComboBox<?> availableFDProductType;
+    private ComboBox<String> availableFDProductType;
 
     @FXML
     private TextField availableFDSearch;
+
+    @FXML
+    private TableView<Categories> availableFDTableView;
 
     @FXML
     private Button availableFDUpdateBtn;
@@ -161,6 +173,7 @@ private Button availableFDAddBtn;
     public void close() {
         System.exit(0);
     }
+
     public void minimize() {
         Stage stage = (Stage) mainForm.getScene().getWindow();
         stage.setIconified(true);
@@ -198,6 +211,8 @@ private Button availableFDAddBtn;
                     "    -fx-text-fill: #000;\n" +
                     "    -fx-border-width: 1px;");
 
+            availableFDShowData();
+
         } else if (event.getSource() == orderBtn) {
             orderForm.setVisible(true);
             dashboardForm.setVisible(false);
@@ -234,8 +249,7 @@ private Button availableFDAddBtn;
             alert.setContentText("Are you sure want to logout ?");
             Optional<ButtonType> optional = alert.showAndWait();
 
-            if (optional.get().equals(ButtonType.OK))
-            {
+            if (optional.get().equals(ButtonType.OK)) {
                 logout.getScene().getWindow().hide();
 
                 // LINK YOUR LOGIN
@@ -265,32 +279,147 @@ private Button availableFDAddBtn;
                 stage.show();
             }
 
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
 
     // AVAILABLE FOODS/DRINKS
-    private String[] status = {"Available", "Not Available"};
-    public void availableFDStatus() {
-        List<String> listStatus = new ArrayList<>();
+    private String[] categories = {"Foods", "Drinks"};
 
-        for (String data : status)
-        {
-            listStatus.add(data);
+    public void availableFDType() {
+        List<String> listType = new ArrayList<>();
+
+        for (String data : categories) {
+            listType.add(data);
         }
 
-        ObservableList<String> listData = FXCollections.observableArrayList(listStatus);
-        availableFDProductStatus.setItems(listData);
+        ObservableList<String> listData = FXCollections.observableArrayList(listType);
+        availableFDProductType.setItems(listData);
     }
 
+    // CRUD MENU -------------------------------
+    // SET PARAM FOR CATEGORIES
+    public static void setParmForCategories(Categories categories, PreparedStatement preparedStatement) throws SQLException {
+        preparedStatement.setString(1, categories.getDishName());
+        preparedStatement.setString(2, categories.getPrice());
+        preparedStatement.setString(3, categories.getAvailability());
+        preparedStatement.setString(4, categories.getType());
+    }
+
+    // ADD
+    public void availableFDAdd() {
+        String sql = "INSERT INTO categories (dish_name, price, availability, type)\n" +
+                "VALUES (?, ?, ?, ?)";
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, availableFDProductName.getText());
+            preparedStatement.setString(2, availableFDProductPrice.getText());
+            preparedStatement.setString(3, availableFDProductAvailability.getText());
+            preparedStatement.setString(4, (String) availableFDProductType.getSelectionModel().getSelectedItem());
+
+            Alert alert;
+            if (availableFDProductName.getText().isEmpty()
+                    || availableFDProductPrice.getText().isEmpty()
+                    || availableFDProductAvailability.getText().isEmpty()
+                    || availableFDProductType.getSelectionModel() == null
+            ) {
+                alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error!");
+                alert.setHeaderText(null);
+                alert.setContentText("Please fill fields");
+                alert.showAndWait();
+            } else {
+                String checkData = "SELECT dish_name FROM categories WHERE dish_name = '" + availableFDProductName.getText() + "'";
+
+                try (Connection connection1 = JDBCConnect.getJDBCConnection();
+                     PreparedStatement preparedStatement1 = connection1.prepareStatement(checkData);
+                     ResultSet rs = preparedStatement1.executeQuery()) {
+                    if (rs.next()) {
+                        alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Already exist!");
+                        alert.showAndWait();
+                    } else {
+                        preparedStatement.executeUpdate();
+
+                        alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Success");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Successfully Added!");
+                        alert.showAndWait();
+
+                        // TO SHOW DATA
+                        availableFDShowData();
+                        // TO CLEAR THE FIELDS
+                        availableFDClear();
+                    }
+                } catch (SQLException e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    // LIST DATA FOODS/DRINKS
+    public ObservableList<Categories> availableFDListData() {
+        ObservableList<Categories> listData = FXCollections.observableArrayList();
+
+        String sql = "SELECT * FROM categories";
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet rs = preparedStatement.executeQuery()) {
+            Categories categories;
+
+            while (rs.next()) {
+                categories = new Categories(rs.getString("dish_ID"),
+                        rs.getString("dish_name"), rs.getString("type"),
+                        rs.getString("price"), rs.getString("availability"));
+
+                listData.add(categories);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return listData;
+    }
+
+    // SHOW LIST DATA FOODS/DRINKS
+    private ObservableList<Categories> availableFDList;
+    public void availableFDShowData() {
+        availableFDList = availableFDListData();
+
+        availableFDColProductID.setCellValueFactory(new PropertyValueFactory<>("dishID"));
+        availableFDColProductName.setCellValueFactory(new PropertyValueFactory<>("dishName"));
+        availableFDColProductType.setCellValueFactory(new PropertyValueFactory<>("type"));
+        availableFDColProductPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
+        availableFDColProductStatus.setCellValueFactory(new PropertyValueFactory<>("availability"));
+
+        availableFDTableView.setItems(availableFDList);
+
+    }
+
+    // CLEAR AVAILABLE THE FIELDS
+    public void availableFDClear() {
+
+        availableFDProductName.setText("");
+        availableFDProductPrice.setText("");
+        availableFDProductAvailability.setText("");
+        availableFDProductType.getSelectionModel().clearSelection();
+
+    }
 
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         displayUsername();
-        availableFDStatus();
+        availableFDType();
+
+        availableFDShowData();
     }
 }
