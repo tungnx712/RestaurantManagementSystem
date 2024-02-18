@@ -190,7 +190,7 @@
                                         </AnchorPane>
                                     </children>
                                 </AnchorPane>
-                                <AnchorPane fx:id="availableFDForm" layoutX="45.0" layoutY="45.0" prefHeight="644.8" prefWidth="868.8" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                <AnchorPane fx:id="availableFDForm" layoutX="45.0" layoutY="45.0" prefHeight="644.8" prefWidth="868.8" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                     <children>
                                         <AnchorPane layoutX="14.0" layoutY="14.0" prefHeight="624.0" prefWidth="298.0" stylesheets="@dashboard.css">
                                             <styleClass>
@@ -234,7 +234,7 @@
                                         <Separator layoutX="321.0" layoutY="14.0" orientation="VERTICAL" prefHeight="624.0" prefWidth="6.0" />
                                     </children>
                                 </AnchorPane>
-                                <AnchorPane fx:id="orderForm" layoutX="23.0" layoutY="24.0" prefHeight="644.8" prefWidth="868.8" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                <AnchorPane fx:id="orderForm" layoutX="23.0" layoutY="24.0" prefHeight="644.8" prefWidth="868.8" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                     <children>
                                         <AnchorPane layoutX="14.0" layoutY="14.0" prefHeight="624.0" prefWidth="499.0" stylesheets="@dashboard.css">
                                             <styleClass>
@@ -264,7 +264,7 @@
                                                 <Label layoutX="41.0" layoutY="73.0" text="Product Name:" />
                                                 <ComboBox fx:id="orderProductName" layoutX="133.0" layoutY="69.0" prefWidth="150.0" promptText="Choose:" />
                                                 <Label layoutX="70.0" layoutY="114.0" text="Quantity:" />
-                                                <Spinner fx:id="orderQuantity" layoutX="133.0" layoutY="110.0" prefHeight="26.0" prefWidth="111.0" />
+                                                <Spinner fx:id="orderQuantity" layoutX="133.0" layoutY="110.0" onMouseClicked="#orderQuantity" prefHeight="26.0" prefWidth="111.0" />
                                                 <Button fx:id="orderAddBtn" layoutX="218.0" layoutY="189.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="71.0" styleClass="add-btn" stylesheets="@dashboard.css" text="Add" />
                                                 <Label layoutX="75.0" layoutY="273.0" text="Total:">
                                                     <font>

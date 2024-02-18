@@ -150,7 +150,7 @@ public class DashboardController implements Initializable {
     private ComboBox<?> orderProductName;
 
     @FXML
-    private Spinner<?> orderQuantity;
+    private Spinner<Integer> orderQuantity;
 
     @FXML
     private Button orderReceiptBtn;
@@ -230,6 +230,10 @@ public class DashboardController implements Initializable {
             availableFDBtn.setStyle("-fx-background-color: transparent;\n" +
                     "    -fx-text-fill: #000;\n" +
                     "    -fx-border-width: 1px;");
+
+            orderProductName();
+            orderSpinner();
+            orderListData();
 
         }
     }
@@ -394,6 +398,7 @@ public class DashboardController implements Initializable {
 
     // SHOW LIST DATA FOODS/DRINKS
     private ObservableList<Categories> availableFDList;
+
     public void availableFDShowData() {
         availableFDList = availableFDListData();
 
@@ -435,15 +440,14 @@ public class DashboardController implements Initializable {
 
     // UPDATE
     public void availableFDUpdate() {
-        String sql = "UPDATE categories SET dish_name = '"+availableFDProductName.getText()+"', " +
-                "price = '"+availableFDProductPrice.getText()+"', " +
-                "availability = '"+availableFDProductAvailability.getText()+"', " +
-                "type = '"+availableFDProductType.getSelectionModel().getSelectedItem()+"'" +
-                "WHERE dish_name = '"+availableFDProductName.getText()+"'";
+        String sql = "UPDATE categories SET dish_name = '" + availableFDProductName.getText() + "', " +
+                "price = '" + availableFDProductPrice.getText() + "', " +
+                "availability = '" + availableFDProductAvailability.getText() + "', " +
+                "type = '" + availableFDProductType.getSelectionModel().getSelectedItem() + "'" +
+                "WHERE dish_name = '" + availableFDProductName.getText() + "'";
 
         try (Connection connection = JDBCConnect.getJDBCConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(sql))
-        {
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             Alert alert;
 
@@ -457,8 +461,7 @@ public class DashboardController implements Initializable {
                 alert.setHeaderText(null);
                 alert.setContentText("Please fill fields");
                 alert.showAndWait();
-            }
-            else {
+            } else {
                 alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Confirm");
                 alert.setHeaderText(null);
@@ -478,8 +481,7 @@ public class DashboardController implements Initializable {
                     availableFDShowData();
                     // TO CLEAR THE FIELDS
                     availableFDClear();
-                }
-                else {
+                } else {
                     alert = new Alert(Alert.AlertType.CONFIRMATION);
                     alert.setTitle("Cancel");
                     alert.setHeaderText(null);
@@ -489,9 +491,7 @@ public class DashboardController implements Initializable {
             }
 
 
-        }
-        catch (SQLException e)
-        {
+        } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
 
@@ -499,11 +499,10 @@ public class DashboardController implements Initializable {
 
     // DELETE
     public void availableFDDelete() {
-        String sql = "DELETE FROM categories WHERE dish_name = '"+availableFDProductName.getText()+"'";
+        String sql = "DELETE FROM categories WHERE dish_name = '" + availableFDProductName.getText() + "'";
 
         try (Connection connection = JDBCConnect.getJDBCConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql))
-        {
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             Alert alert;
 
@@ -517,8 +516,7 @@ public class DashboardController implements Initializable {
                 alert.setHeaderText(null);
                 alert.setContentText("Please fill fields");
                 alert.showAndWait();
-            }
-            else {
+            } else {
                 alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Confirm");
                 alert.setHeaderText(null);
@@ -538,8 +536,7 @@ public class DashboardController implements Initializable {
                     availableFDShowData();
                     // TO CLEAR THE FIELDS
                     availableFDClear();
-                }
-                else {
+                } else {
                     alert = new Alert(Alert.AlertType.CONFIRMATION);
                     alert.setTitle("Cancel");
                     alert.setHeaderText(null);
@@ -549,9 +546,7 @@ public class DashboardController implements Initializable {
             }
 
 
-        }
-        catch (SQLException e)
-        {
+        } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -569,11 +564,9 @@ public class DashboardController implements Initializable {
 
                 String searchKey = newValue.toLowerCase();
 
-                if (predicateCatagories.getDishName().toLowerCase().contains(searchKey))
-                {
+                if (predicateCatagories.getDishName().toLowerCase().contains(searchKey)) {
                     return true;
-                } else
-                {
+                } else {
                     return false;
                 }
             });
@@ -587,12 +580,159 @@ public class DashboardController implements Initializable {
 
     }
 
+    // ORDERS --------------------
+    // ORDERS NAME
+    public void orderProductName() {
 
+        String sql = "SELECT dish_name FROM categories WHERE availability > 0";
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet rs = preparedStatement.executeQuery()) {
+
+            ObservableList listData = FXCollections.observableArrayList();
+
+            while (rs.next()) {
+                listData.add(rs.getString("dish_name"));
+            }
+
+            orderProductName.setItems(listData);
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    // ORDERS QUANTITY
+    private SpinnerValueFactory<Integer> spinner;
+
+    public void orderSpinner() {
+        spinner = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 50, 0);
+        orderQuantity.setValueFactory(spinner);
+    }
+
+    private int qty;
+
+    public void orderQuantity() {
+        qty = orderQuantity.getValue();
+
+        System.out.println(qty);
+    }
+
+    // ORDERS ADD
+    // ORDERS LIST DATA
+    public ObservableList<Bill> orderListData() {
+
+        orderClientID();
+
+        ObservableList<Bill> listData = FXCollections.observableArrayList();
+
+        String sql = "SELECT * FROM bill WHERE client_ID = " + clientID;
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet rs = preparedStatement.executeQuery())
+        {
+            Bill bill;
+
+            while (rs.next()) {
+                bill = new Bill(rs.getString("bill_ID"),
+                        rs.getString("dish_name"),
+                        rs.getString("type"),
+                        rs.getDouble("price"),
+                        rs.getInt("quantity"));
+
+                listData.add(bill);
+            }
+
+        }
+        catch (SQLException e)
+        {
+            System.out.println(e.getMessage());
+        }
+
+        return listData;
+    }
+
+    //
+    private int clientID;
+
+    public void orderClientID() {
+
+        String sql = "SELECT client_ID FROM bill";
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet rs = preparedStatement.executeQuery()) {
+            while (rs.next()) {
+                clientID = rs.getInt("client_ID");
+
+                String checkData = "SELECT client_ID FROM client";
+
+                try (Connection connectionCheck = JDBCConnect.getJDBCConnection();
+                     PreparedStatement preparedStatementCheck = connectionCheck.prepareStatement(checkData);
+                     ResultSet rsCheck = preparedStatementCheck.executeQuery()) {
+
+                    int clientInfoID = 0;
+
+                    while (rsCheck.next()) {
+                        clientInfoID = rsCheck.getInt("client_ID");
+                    }
+
+                    if (clientID == 0) {
+                        clientID += 1;
+                    } else if (clientID == clientInfoID) {
+                        clientID += 1;
+                    }
+
+                } catch (SQLException e) {
+                    System.out.println(e.getMessage());
+                }
+
+
+            }
+
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    // ORDERS ADD
+    public void orderAdd() {
+        orderClientID();
+
+        String sql = "INSERT INTO bill (client_ID, dish_ID, dish_name, price, type, quantity)\n" +
+                "VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql))
+        {
+            preparedStatement.setString(1, String.valueOf(clientID));
+            preparedStatement.setString(2, (String) orderProductID.getSelectionModel().getSelectedItem());
+            preparedStatement.setString(3, (String) orderProductName.getSelectionModel().getSelectedItem());
+
+
+
+
+
+        }
+        catch (SQLException e)
+        {
+            System.out.println(e.getMessage());
+        }
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         displayUsername();
+
         availableFDType();
         availableFDShowData();
+
+        orderProductName();
+        orderSpinner();
+        orderListData();
     }
 }
