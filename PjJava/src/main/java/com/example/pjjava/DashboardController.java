@@ -169,6 +169,39 @@ public class DashboardController implements Initializable {
     @FXML
     private AnchorPane mainForm;
 
+    @FXML
+    private Button clients_addBtn;
+
+    @FXML
+    private Button clients_clearBtn;
+
+    @FXML
+    private TableColumn<?, ?> clients_col_customersId;
+
+    @FXML
+    private TableColumn<?, ?> clients_col_email;
+
+    @FXML
+    private TableColumn<?, ?> clients_col_phonenumber;
+
+    @FXML
+    private TextField clients_customers;
+
+    @FXML
+    private Button clients_deleteBtn;
+
+    @FXML
+    private DatePicker clients_dob;
+
+    @FXML
+    private TextField clients_phonenumber;
+
+    @FXML
+    private TextField clients_search;
+
+    @FXML
+    private Button clients_updateBtn;
+
     private double x = 0;
     private double y = 0;
 
@@ -306,13 +339,6 @@ public class DashboardController implements Initializable {
     }
 
     // CRUD MENU -------------------------------
-    // SET PARAM FOR CATEGORIES
-//    public static void setParamForCategories(Categories categories, PreparedStatement preparedStatement) throws SQLException {
-//        preparedStatement.setString(1, categories.getDishName());
-//        preparedStatement.setString(2, categories.getPrice());
-//        preparedStatement.setString(3, categories.getAvailability());
-//        preparedStatement.setString(4, categories.getType());
-//    }
 
     // ADD
     public void availableFDAdd() {

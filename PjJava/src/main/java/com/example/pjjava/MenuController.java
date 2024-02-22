@@ -23,12 +23,16 @@ import javafx.stage.StageStyle;
 import java.io.File;
 import java.net.URL;
 import java.sql.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.Date;
 
 
 public class MenuController implements Initializable {
     @FXML
-    private TableView<?> client_tableView;
+    private TableView<Client> client_tableView;
 
     @FXML
     private Button clientsBtn;
@@ -43,13 +47,16 @@ public class MenuController implements Initializable {
     private Button clients_clearBtn;
 
     @FXML
-    private TableColumn<?, ?> clients_col_customersId;
+    private TableColumn<Client, String> clients_col_customersId;
 
     @FXML
-    private TableColumn<?, ?> clients_col_email;
+    private TableColumn<Client, String> clients_col_name;
 
     @FXML
-    private TableColumn<?, ?> clients_col_phonenumber;
+    private TableColumn<?, ?> clients_col_dob;
+
+    @FXML
+    private TableColumn<Client, String> clients_col_phonenumber;
 
     @FXML
     private TextField clients_customers;
@@ -58,7 +65,7 @@ public class MenuController implements Initializable {
     private Button clients_deleteBtn;
 
     @FXML
-    private TextField clients_email;
+    private DatePicker clients_dob;
 
     @FXML
     private TextField clients_phonenumber;
@@ -297,6 +304,9 @@ public class MenuController implements Initializable {
 
     private Image image;
 
+
+    // CRUD MENU _____________________________________________________________________________________________________
+    // ADD MENU
     public void menuAddBtn() throws SQLException {
         if (menuitems_dishName.getText().isEmpty()
                 || menuitems_type.getSelectionModel().getSelectedItem() == null
@@ -383,6 +393,8 @@ public class MenuController implements Initializable {
         }
     }
 
+
+    // UPDATE MENU
     public void menuUpdateBtn() throws SQLException {
         if (menuitems_dishName.getText().isEmpty()
                 || menuitems_type.getSelectionModel().getSelectedItem() == null
@@ -442,7 +454,6 @@ public class MenuController implements Initializable {
                     preparedStatementType.executeUpdate();
 
 
-
                     alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Information Message");
                     alert.setHeaderText(null);
@@ -452,7 +463,7 @@ public class MenuController implements Initializable {
                     menuShowData();
                     menuClearBtn();
 
-                }else {
+                } else {
                     alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Error Message");
                     alert.setHeaderText(null);
@@ -465,7 +476,9 @@ public class MenuController implements Initializable {
         }
     }
 
-    public void menuDeleteBtn(){
+
+    // DELETE MENU
+    public void menuDeleteBtn() {
 
         if (data.id == 0) {
 
@@ -475,7 +488,7 @@ public class MenuController implements Initializable {
             alert.setContentText("Please fill all blank fields");
             alert.showAndWait();
 
-        } else{
+        } else {
             alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Confirmation Message");
             alert.setHeaderText(null);
@@ -501,10 +514,10 @@ public class MenuController implements Initializable {
                     menuShowData();
                     menuClearBtn();
 
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }else {
+            } else {
                 alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error Message");
                 alert.setHeaderText(null);
@@ -515,6 +528,8 @@ public class MenuController implements Initializable {
 
     }
 
+
+    // CLEAR FIELD
     public void menuClearBtn() {
 
         menuitems_dishName.setText("");
@@ -530,6 +545,8 @@ public class MenuController implements Initializable {
 
     }
 
+
+    // IMPORT IMAGE
     public void menuImportBtn() {
         FileChooser openFile = new FileChooser();
         openFile.getExtensionFilters().add(new FileChooser.ExtensionFilter("Open image File", "*png", "*jpg"));
@@ -545,6 +562,8 @@ public class MenuController implements Initializable {
         }
     }
 
+
+    // GET ALL MENU LIST DATA
     public ObservableList<DishData> menuDataList() {
         ObservableList<DishData> listData = FXCollections.observableArrayList();
         String sql = "SELECT dish.dish_ID, dish.dish_name, dish.price, dish.made_price, dish.availability, dish.stock, dish.image_link, types.type_name " +
@@ -583,6 +602,8 @@ public class MenuController implements Initializable {
 
     private ObservableList<DishData> menuListData;
 
+
+    // SHOW MENU LIST DATA
     public void menuShowData() {
         menuListData = menuDataList();
 
@@ -597,6 +618,7 @@ public class MenuController implements Initializable {
         menu_tableView.setItems(menuListData);
     }
 
+    // SELECT MENU DATA
     public void menuSelectData() {
         DishData dishData = menu_tableView.getSelectionModel().getSelectedItem();
         int num = menu_tableView.getSelectionModel().getSelectedIndex();
@@ -842,6 +864,266 @@ public class MenuController implements Initializable {
     private String[] status = {"Available", "Not Available"};
 
 
+    // CRUD CLIENTS ______________________________________________________________________________________________
+    // GET ALL CLIENTS LIST DATA
+    public ObservableList<Client> clientDataList() {
+        ObservableList<Client> listData = FXCollections.observableArrayList();
+
+        String sql = "SELECT * FROM client";
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet rs = preparedStatement.executeQuery()) {
+            Client dClient;
+
+            while (rs.next()) {
+                dClient = new Client(rs.getInt("client_ID"),
+                        rs.getString("client_name"),
+                        rs.getString("phone"),
+                        rs.getDate("dob"));
+
+                listData.add(dClient);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return listData;
+    }
+
+
+    // SHOW CLIENT LIST DATA
+    private ObservableList<Client> clientsListData;
+
+    public void clientShowData() {
+        clientsListData = clientDataList();
+
+        clients_col_customersId.setCellValueFactory(new PropertyValueFactory<>("client_ID"));
+        clients_col_name.setCellValueFactory(new PropertyValueFactory<>("client_name"));
+        clients_col_phonenumber.setCellValueFactory(new PropertyValueFactory<>("phone"));
+        clients_col_dob.setCellValueFactory(new PropertyValueFactory<>("dob"));
+
+        client_tableView.setItems(clientsListData);
+    }
+
+    // SELECT CLIENT DATA
+    public void clientSelectData() {
+        Client client = client_tableView.getSelectionModel().getSelectedItem();
+
+        int num = client_tableView.getSelectionModel().getSelectedIndex();
+        if ((num - 1) < -1) return;
+
+        clients_customers.setText(client.getClient_name());
+        clients_phonenumber.setText(client.getPhone());
+
+        Date dob = client.getDob();
+        if (dob != null) {
+            LocalDate localDate = Instant.ofEpochMilli(dob.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
+            clients_dob.setValue(localDate);
+        }
+
+    }
+
+    // CLEAR FIELD
+    public void clientClearBtn() {
+        clients_customers.setText("");
+        clients_phonenumber.setText("");
+        clients_dob.setValue(null);
+    }
+
+    // ADD CLIENT
+    public void clientAddBtn() throws SQLException {
+
+        if (clients_customers.getText().isEmpty()
+                || clients_phonenumber.getText().isEmpty()
+                || clients_dob.getValue() == null) {
+
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please fill all blank fields");
+            alert.showAndWait();
+        } else {
+            String checkClientName = "SELECT client_name FROM client WHERE client_name = '" + clients_customers.getText() + "'";
+
+            try (Connection connection = JDBCConnect.getJDBCConnection();
+                 PreparedStatement preparedStatement = connection.prepareStatement(checkClientName);
+                 ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText(clients_customers.getText() + " is already taken");
+                    alert.showAndWait();
+                } else {
+                    // INSERT CLIENT
+                    String sqlClient = "INSERT INTO client"
+                            + "(client_name, phone, dob)"
+                            + "VALUES(?, ?, ?)";
+
+                    try (Connection connectionAdd = JDBCConnect.getJDBCConnection();
+                         PreparedStatement preparedStatementAdd = connection.prepareStatement(sqlClient)) {
+                        preparedStatementAdd.setString(1, clients_customers.getText());
+                        preparedStatementAdd.setString(2, clients_phonenumber.getText());
+
+
+                        LocalDate dob = clients_dob.getValue();
+                        if (dob != null) {
+                            java.sql.Date sqlDate = java.sql.Date.valueOf(dob);
+                            preparedStatementAdd.setDate(3, sqlDate);
+                        } else {
+                            preparedStatementAdd.setNull(3, java.sql.Types.DATE);
+                        }
+
+                        preparedStatementAdd.executeUpdate();
+
+
+                        alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Information Message");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Successfully Added!");
+                        alert.showAndWait();
+
+                        // TO SHOW DATA
+                        clientShowData();
+                        // TO CLEAR THE FIELDS
+                        clientClearBtn();
+
+                    } catch (SQLException e) {
+                        System.out.println(e.getMessage());
+                    }
+
+                }
+
+
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+
+    }
+
+
+    // UPDATE CLIENT
+    public void clientUpdateBtn() throws SQLException {
+        if (clients_customers.getText().isEmpty()
+                || clients_phonenumber.getText().isEmpty()
+                || clients_dob.getValue() == null) {
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please fill all blank fields");
+            alert.showAndWait();
+        } else {
+            String sqlUpdate = "UPDATE client SET " +
+                    "client_name = '" + clients_customers.getText() + "', " +
+                    "phone = '" + clients_phonenumber.getText() + "', " +
+                    "dob = '" + clients_dob.getValue() + "' " +
+                    "WHERE client_name = '" + clients_customers.getText() + "'";
+
+            try (Connection connection = JDBCConnect.getJDBCConnection();
+                 PreparedStatement preparedStatement = connection.prepareStatement(sqlUpdate)) {
+
+                if (clients_customers.getText().isEmpty()
+                        || clients_phonenumber.getText().isEmpty()
+                        || clients_dob.getValue() == null
+                ) {
+                    alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Please fill fields");
+                    alert.showAndWait();
+                } else {
+                    alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Confirm");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Update");
+                    Optional<ButtonType> optional = alert.showAndWait();
+
+                    if (optional.get().equals(ButtonType.OK)) {
+                        preparedStatement.executeUpdate();
+
+                        alert = new Alert(Alert.AlertType.CONFIRMATION);
+                        alert.setTitle("Update");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Updated");
+                        alert.showAndWait();
+
+                        // TO SHOW DATA
+                        clientShowData();
+                        // TO CLEAR THE FIELDS
+                        clientClearBtn();
+                    } else {
+                        alert = new Alert(Alert.AlertType.CONFIRMATION);
+                        alert.setTitle("Cancel");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Cancelled");
+                        alert.showAndWait();
+                    }
+                }
+
+
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+
+
+        }
+    }
+
+    // DELETE CLIENT
+    public void clientDeleteBtn() {
+        String sqlDelete = "DELETE FROM client WHERE client_name = '" + clients_customers.getText() + "'";
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sqlDelete)) {
+
+            if (clients_customers.getText().isEmpty()
+                    || clients_phonenumber.getText().isEmpty()
+                    || clients_dob.getValue() == null
+            ) {
+                alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Please fill fields");
+                alert.showAndWait();
+            } else {
+                alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Confirm");
+                alert.setHeaderText(null);
+                alert.setContentText("Update");
+                Optional<ButtonType> optional = alert.showAndWait();
+
+                if (optional.get().equals(ButtonType.OK)) {
+                    preparedStatement.executeUpdate();
+
+                    alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Update");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Updated");
+                    alert.showAndWait();
+
+                    // TO SHOW DATA
+                    clientShowData();
+                    // TO CLEAR THE FIELDS
+                    clientClearBtn();
+                } else {
+                    alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Cancel");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Cancelled");
+                    alert.showAndWait();
+                }
+            }
+
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         displayUsername();
@@ -849,6 +1131,7 @@ public class MenuController implements Initializable {
         menuStatusList();
         menuShowData();
 
+        clientShowData();
 
     }
 }
