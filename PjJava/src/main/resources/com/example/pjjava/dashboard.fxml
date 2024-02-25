@@ -221,7 +221,7 @@
                                                 <String fx:value="shadow" />
                                             </styleClass>
                                  <children>
-                                    <AnchorPane layoutX="14.0" layoutY="14.0" prefHeight="624.0" prefWidth="271.2" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <AnchorPane prefHeight="624.0" prefWidth="271.2" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
                                           <AnchorPane layoutX="14.0" layoutY="14.0" prefHeight="126.0" prefWidth="115.0" stylesheets="@dashboard.css">
                                              <styleClass>
@@ -229,6 +229,18 @@
                                                 <String fx:value="card" />
                                                 <String fx:value="shadow" />
                                              </styleClass>
+                                             <children>
+                                                <Label layoutX="14.0" layoutY="23.0" prefHeight="28.0" prefWidth="78.0" text="Table 1">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <Label layoutX="14.0" layoutY="63.0" prefHeight="33.0" prefWidth="71.0" text="Empty">
+                                                   <font>
+                                                      <Font size="15.0" />
+                                                   </font>
+                                                </Label>
+                                             </children>
                                           </AnchorPane>
                                           <AnchorPane layoutX="141.0" layoutY="14.0" prefHeight="126.0" prefWidth="115.0" stylesheets="@dashboard.css">
                                              <styleClass>
@@ -236,6 +248,18 @@
                                                 <String fx:value="card" />
                                                 <String fx:value="shadow" />
                                              </styleClass>
+                                             <children>
+                                                <Label layoutX="14.0" layoutY="23.0" prefHeight="28.0" prefWidth="78.0" text="Table 2">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <Label layoutX="14.0" layoutY="63.0" prefHeight="33.0" prefWidth="71.0" text="Empty">
+                                                   <font>
+                                                      <Font size="15.0" />
+                                                   </font>
+                                                </Label>
+                                             </children>
                                           </AnchorPane>
                                           <AnchorPane layoutX="14.0" layoutY="169.0" prefHeight="126.0" prefWidth="115.0" stylesheets="@dashboard.css">
                                              <styleClass>
@@ -243,6 +267,18 @@
                                                 <String fx:value="card" />
                                                 <String fx:value="shadow" />
                                              </styleClass>
+                                             <children>
+                                                <Label layoutX="14.0" layoutY="23.0" prefHeight="28.0" prefWidth="78.0" text="Table 3">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <Label layoutX="14.0" layoutY="63.0" prefHeight="33.0" prefWidth="71.0" text="Empty">
+                                                   <font>
+                                                      <Font size="15.0" />
+                                                   </font>
+                                                </Label>
+                                             </children>
                                           </AnchorPane>
                                           <AnchorPane layoutX="141.0" layoutY="169.0" prefHeight="126.0" prefWidth="115.0" stylesheets="@dashboard.css">
                                              <styleClass>
@@ -250,13 +286,18 @@
                                                 <String fx:value="card" />
                                                 <String fx:value="shadow" />
                                              </styleClass>
-                                          </AnchorPane>
-                                          <AnchorPane layoutX="14.0" layoutY="327.0" prefHeight="126.0" prefWidth="115.0" stylesheets="@dashboard.css">
-                                             <styleClass>
-                                                <String fx:value="white-bg" />
-                                                <String fx:value="card" />
-                                                <String fx:value="shadow" />
-                                             </styleClass>
+                                             <children>
+                                                <Label layoutX="14.0" layoutY="23.0" prefHeight="28.0" prefWidth="78.0" text="Table 4">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <Label layoutX="14.0" layoutY="63.0" prefHeight="33.0" prefWidth="71.0" text="Empty">
+                                                   <font>
+                                                      <Font size="15.0" />
+                                                   </font>
+                                                </Label>
+                                             </children>
                                           </AnchorPane>
                                           <AnchorPane layoutX="141.0" layoutY="327.0" prefHeight="126.0" prefWidth="115.0" stylesheets="@dashboard.css">
                                              <styleClass>
@@ -264,13 +305,37 @@
                                                 <String fx:value="card" />
                                                 <String fx:value="shadow" />
                                              </styleClass>
+                                             <children>
+                                                <Label layoutX="14.0" layoutY="23.0" prefHeight="28.0" prefWidth="78.0" text="Table 6">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <Label layoutX="14.0" layoutY="63.0" prefHeight="33.0" prefWidth="71.0" text="Empty">
+                                                   <font>
+                                                      <Font size="15.0" />
+                                                   </font>
+                                                </Label>
+                                             </children>
                                           </AnchorPane>
-                                          <AnchorPane layoutX="14.0" layoutY="483.0" prefHeight="126.0" prefWidth="115.0" stylesheets="@dashboard.css">
+                                          <AnchorPane layoutX="14.0" layoutY="327.0" prefHeight="126.0" prefWidth="115.0" stylesheets="@dashboard.css">
                                              <styleClass>
                                                 <String fx:value="white-bg" />
                                                 <String fx:value="card" />
                                                 <String fx:value="shadow" />
                                              </styleClass>
+                                             <children>
+                                                <Label layoutX="14.0" layoutY="23.0" prefHeight="28.0" prefWidth="78.0" text="Table 5">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <Label layoutX="14.0" layoutY="63.0" prefHeight="33.0" prefWidth="71.0" text="Empty">
+                                                   <font>
+                                                      <Font size="15.0" />
+                                                   </font>
+                                                </Label>
+                                             </children>
                                           </AnchorPane>
                                           <AnchorPane layoutX="141.0" layoutY="483.0" prefHeight="126.0" prefWidth="115.0" stylesheets="@dashboard.css">
                                              <styleClass>
@@ -278,6 +343,37 @@
                                                 <String fx:value="card" />
                                                 <String fx:value="shadow" />
                                              </styleClass>
+                                             <children>
+                                                <Label layoutX="14.0" layoutY="23.0" prefHeight="28.0" prefWidth="78.0" text="Table 8">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <Label layoutX="14.0" layoutY="63.0" prefHeight="33.0" prefWidth="71.0" text="Empty">
+                                                   <font>
+                                                      <Font size="15.0" />
+                                                   </font>
+                                                </Label>
+                                             </children>
+                                          </AnchorPane>
+                                          <AnchorPane layoutX="14.0" layoutY="483.0" prefHeight="126.0" prefWidth="115.0" stylesheets="@dashboard.css">
+                                             <styleClass>
+                                                <String fx:value="white-bg" />
+                                                <String fx:value="card" />
+                                                <String fx:value="shadow" />
+                                             </styleClass>
+                                             <children>
+                                                <Label layoutX="14.0" layoutY="23.0" prefHeight="28.0" prefWidth="78.0" text="Table 7">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <Label layoutX="14.0" layoutY="63.0" prefHeight="33.0" prefWidth="71.0" text="Empty">
+                                                   <font>
+                                                      <Font size="15.0" />
+                                                   </font>
+                                                </Label>
+                                             </children>
                                           </AnchorPane>
                                        </children>
                                     </AnchorPane>
