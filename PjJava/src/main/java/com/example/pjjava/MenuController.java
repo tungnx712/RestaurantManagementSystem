@@ -155,7 +155,7 @@ public class MenuController implements Initializable {
     private Button employees_updateBtn;
 
     @FXML
-    private TableView<?> employess_tableView;
+    private TableView<Employee> employess_tableView;
 
     @FXML
     private AnchorPane inventory_form;
@@ -962,7 +962,7 @@ public class MenuController implements Initializable {
                             + "VALUES(?, ?, ?)";
 
                     try (Connection connectionAdd = JDBCConnect.getJDBCConnection();
-                         PreparedStatement preparedStatementAdd = connection.prepareStatement(sqlClient)) {
+                         PreparedStatement preparedStatementAdd = connectionAdd.prepareStatement(sqlClient)) {
                         preparedStatementAdd.setString(1, clients_customers.getText());
                         preparedStatementAdd.setString(2, clients_phonenumber.getText());
 
@@ -1124,6 +1124,167 @@ public class MenuController implements Initializable {
     }
 
 
+    // CRUD EMPLOYEE _____________________________________________________________________________________________________
+    // GET ALL EMPLOYEES LIST DATA
+    public ObservableList<Employee> employeeDataList() {
+        ObservableList<Employee> listData = FXCollections.observableArrayList();
+
+        String sql = "SELECT * FROM employee";
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet rs = preparedStatement.executeQuery()) {
+
+            Employee dEmployee;
+            while (rs.next()) {
+                dEmployee = new Employee(rs.getInt("emp_ID"),
+                        rs.getString("emp_name"),
+                        rs.getDouble("salary"),
+                        rs.getString("position"));
+
+                listData.add(dEmployee);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return listData;
+    }
+
+    // SHOW EMPLOYEE LIST DATA
+    private ObservableList<Employee> employeesListData;
+
+    public void employeeShowData() {
+        employeesListData = employeeDataList();
+
+        employees_col_empId.setCellValueFactory(new PropertyValueFactory<>("emp_ID"));
+        employees_col_name.setCellValueFactory(new PropertyValueFactory<>("emp_name"));
+        employees_col_salary.setCellValueFactory(new PropertyValueFactory<>("salary"));
+        employees_col_position.setCellValueFactory(new PropertyValueFactory<>("position"));
+
+        employess_tableView.setItems(employeesListData);
+    }
+
+    // SELECT EMPLOYEE DATA
+    public void employeeSelectData() {
+        Employee employee = employess_tableView.getSelectionModel().getSelectedItem();
+
+        int num = employess_tableView.getSelectionModel().getSelectedIndex();
+        if ((num - 1) < -1) return;
+
+        employees_name.setText(employee.getEmp_name());
+        employees_salary.setText(String.valueOf(employee.getSalary()));
+        employees_position.setText(employee.getPosition());
+
+    }
+
+    // CLEAR FIELD
+    public void employeeClearBtn() {
+        employees_name.setText("");
+        employees_salary.setText("");
+        employees_position.setText("");
+    }
+
+    // ADD EMPLOYEE
+    public void employeeAddBtn() {
+        if (employees_name.getText().isEmpty()
+                || employees_salary.getText().isEmpty()
+                || employees_position.getText().isEmpty()) {
+
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please fill all blank fields");
+            alert.showAndWait();
+        }
+        else {
+            String checkEmployee = "SELECT emp_name FROM employee";
+
+            try (Connection connection = JDBCConnect.getJDBCConnection();
+                 PreparedStatement preparedStatement = connection.prepareStatement(checkEmployee);
+                 ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText(employees_name.getText() + " is already taken");
+                    alert.showAndWait();
+                } else {
+                    // INSERT EMPLOYEE
+                    String sqlEmployee = "INSERT INTO employees_name"
+                            + "(emp_name, salary, position)"
+                            + "VALUES(?, ?, ?)";
+
+                    try (Connection connectionAdd = JDBCConnect.getJDBCConnection();
+                         PreparedStatement preparedStatementAdd = connectionAdd.prepareStatement(sqlEmployee)) {
+
+                        preparedStatementAdd.setString(1, employees_name.getText());
+                        preparedStatementAdd.setString(2, employees_salary.getText());
+                        preparedStatementAdd.setString(3, employees_position.getText());
+
+                        preparedStatementAdd.executeUpdate();
+
+
+                        alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Information Message");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Successfully Added!");
+                        alert.showAndWait();
+
+
+                        // TO SHOW DATA
+                        employeeShowData();
+                        // TO CLEAR THE FIELDS
+                        employeeClearBtn();
+
+                    } catch (SQLException e) {
+                        System.out.println(e.getMessage());
+                    }
+
+                }
+
+
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+
+    }
+
+    // UPDATE EMPLOYEE
+    public void employeeUpdateBtn() {
+        if (employees_name.getText().isEmpty()
+                || employees_salary.getText().isEmpty()
+                || employees_position.getText().isEmpty()) {
+
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please fill all blank fields");
+            alert.showAndWait();
+        }
+        else {
+            String sqlUpdate = "UPDATE employee SET " +
+                    "emp_name = '" + employees_name.getText() + "', " +
+                    "salary = '" + employees_salary.getText() + "', " +
+                    "position = '" + employees_position.getText() + "' " +
+                    "WHERE client_name = '" + clients_customers.getText() + "'";
+
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         displayUsername();
@@ -1133,5 +1294,6 @@ public class MenuController implements Initializable {
 
         clientShowData();
 
+        employeeShowData();
     }
 }
