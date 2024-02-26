@@ -3,10 +3,13 @@ package com.example.pjjava;
 import dao.JDBCConnect;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
@@ -23,16 +26,14 @@ import javafx.stage.StageStyle;
 import java.io.File;
 import java.net.URL;
 import java.sql.*;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 
 
 public class MenuController implements Initializable {
     @FXML
-    private TableView<Client> client_tableView;
+    private TableView<ClientData> client_tableView;
 
     @FXML
     private Button clientsBtn;
@@ -47,16 +48,16 @@ public class MenuController implements Initializable {
     private Button clients_clearBtn;
 
     @FXML
-    private TableColumn<Client, String> clients_col_customersId;
+    private TableColumn<ClientData, String> clients_col_customersId;
 
     @FXML
-    private TableColumn<Client, String> clients_col_name;
+    private TableColumn<ClientData, String> clients_col_phone;
 
     @FXML
-    private TableColumn<?, ?> clients_col_dob;
+    private TableColumn<ClientData, String> clients_col_customers;
 
     @FXML
-    private TableColumn<Client, String> clients_col_phonenumber;
+    private TableColumn<ClientData, String> clients_col_dob;
 
     @FXML
     private TextField clients_customers;
@@ -65,10 +66,13 @@ public class MenuController implements Initializable {
     private Button clients_deleteBtn;
 
     @FXML
-    private DatePicker clients_dob;
+    private TextField clients_email;
 
     @FXML
     private TextField clients_phonenumber;
+
+    @FXML
+    private TextField clients_dob;
 
     @FXML
     private TextField clients_search;
@@ -113,25 +117,25 @@ public class MenuController implements Initializable {
     private Button employees_clearBtn;
 
     @FXML
-    private TableColumn<?, ?> employees_col_department;
+    private TableColumn<EmployeesData, String> employees_col_department;
 
     @FXML
-    private TableColumn<?, ?> employees_col_empId;
+    private TableColumn<EmployeesData, String> employees_col_empId;
 
     @FXML
-    private TableColumn<?, ?> employees_col_name;
+    private TableColumn<EmployeesData, String> employees_col_name;
 
     @FXML
-    private TableColumn<?, ?> employees_col_position;
+    private TableColumn<EmployeesData, String> employees_col_position;
 
     @FXML
-    private TableColumn<?, ?> employees_col_salary;
+    private TableColumn<EmployeesData, String> employees_col_salary;
 
     @FXML
     private Button employees_deleteBtn;
 
     @FXML
-    private TextField employees_epartment;
+    private ComboBox<?> employees_department;
 
     @FXML
     private ImageView employees_imageview;
@@ -143,7 +147,7 @@ public class MenuController implements Initializable {
     private TextField employees_name;
 
     @FXML
-    private TextField employees_position;
+    private ComboBox<?> employees_pos;
 
     @FXML
     private TextField employees_salary;
@@ -155,7 +159,7 @@ public class MenuController implements Initializable {
     private Button employees_updateBtn;
 
     @FXML
-    private TableView<Employee> employess_tableView;
+    private TableView<EmployeesData> employess_tableView;
 
     @FXML
     private AnchorPane inventory_form;
@@ -284,6 +288,12 @@ public class MenuController implements Initializable {
     private TableView<?> orderTableView;
 
     @FXML
+    private Pagination menu_pagination;
+
+    @FXML
+    private Pagination emp_pagination;
+
+    @FXML
     private Label orderTotal;
 
     @FXML
@@ -301,12 +311,9 @@ public class MenuController implements Initializable {
     private PreparedStatement preparedStatement;
     private Statement statement;
     private ResultSet resultSet;
-
     private Image image;
 
 
-    // CRUD MENU _____________________________________________________________________________________________________
-    // ADD MENU
     public void menuAddBtn() throws SQLException {
         if (menuitems_dishName.getText().isEmpty()
                 || menuitems_type.getSelectionModel().getSelectedItem() == null
@@ -369,13 +376,6 @@ public class MenuController implements Initializable {
                     PreparedStatement preparedStatementType = connection.prepareStatement(sqlType);
                     preparedStatementType.setInt(1, type_ID);
                     preparedStatementType.executeUpdate();
-//            String sqlType = "INSERT INTO types_dish"
-//                    + "(type_ID)"
-//                    + "VALUES(?)";
-//            PreparedStatement preparedStatementType = connection.prepareStatement(sqlType);
-//            preparedStatementType.setString(1,(String) menuitems_type.getSelectionModel().getSelectedItem());
-//
-//            preparedStatementType.executeUpdate();
 
                     alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Information Message");
@@ -393,8 +393,6 @@ public class MenuController implements Initializable {
         }
     }
 
-
-    // UPDATE MENU
     public void menuUpdateBtn() throws SQLException {
         if (menuitems_dishName.getText().isEmpty()
                 || menuitems_type.getSelectionModel().getSelectedItem() == null
@@ -476,8 +474,6 @@ public class MenuController implements Initializable {
         }
     }
 
-
-    // DELETE MENU
     public void menuDeleteBtn() {
 
         if (data.id == 0) {
@@ -528,8 +524,6 @@ public class MenuController implements Initializable {
 
     }
 
-
-    // CLEAR FIELD
     public void menuClearBtn() {
 
         menuitems_dishName.setText("");
@@ -545,8 +539,6 @@ public class MenuController implements Initializable {
 
     }
 
-
-    // IMPORT IMAGE
     public void menuImportBtn() {
         FileChooser openFile = new FileChooser();
         openFile.getExtensionFilters().add(new FileChooser.ExtensionFilter("Open image File", "*png", "*jpg"));
@@ -562,8 +554,6 @@ public class MenuController implements Initializable {
         }
     }
 
-
-    // GET ALL MENU LIST DATA
     public ObservableList<DishData> menuDataList() {
         ObservableList<DishData> listData = FXCollections.observableArrayList();
         String sql = "SELECT dish.dish_ID, dish.dish_name, dish.price, dish.made_price, dish.availability, dish.stock, dish.image_link, types.type_name " +
@@ -578,7 +568,6 @@ public class MenuController implements Initializable {
 
             preparedStatement = connection.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
-
             DishData dData;
 
             while (resultSet.next()) {
@@ -601,9 +590,6 @@ public class MenuController implements Initializable {
     }
 
     private ObservableList<DishData> menuListData;
-
-
-    // SHOW MENU LIST DATA
     public void menuShowData() {
         menuListData = menuDataList();
 
@@ -616,9 +602,44 @@ public class MenuController implements Initializable {
         menu_col_status.setCellValueFactory(new PropertyValueFactory<>("availability"));
 
         menu_tableView.setItems(menuListData);
+
+
+        FilteredList<DishData> filteredDish = new FilteredList<>(menuListData, b -> true);
+        menuSearch.textProperty().addListener((observable, oldValue, newValue) ->{
+            filteredDish.setPredicate(dishData -> {
+
+                if (newValue.isEmpty() || newValue.isBlank() || newValue == null){
+                    return true;
+                }
+
+                String searchKeyWord = newValue.toLowerCase();
+
+                if (dishData.getDish_name().toLowerCase().indexOf(searchKeyWord) > -1){
+                    return true;
+                } else if (dishData.getType_name().toLowerCase().indexOf(searchKeyWord) > -1){
+                    return true;
+                } else if (dishData.getPrice().toString().indexOf(searchKeyWord) > -1) {
+                    return true;
+                } else if (dishData.getMade_price().toString().indexOf(searchKeyWord) > -1){
+                    return true;
+                } else if (dishData.getStock().toString().indexOf(searchKeyWord) > -1) {
+                    return true;
+                } else if (dishData.getAvailability().toString().indexOf(searchKeyWord) > -1) {
+                    return true;
+                } else
+                    return false;
+
+            });
+
+        });
+
+        SortedList<DishData> sortedList = new SortedList<>(filteredDish);
+        sortedList.comparatorProperty().bind(menu_tableView.comparatorProperty());
+
+        menu_tableView.setItems(sortedList);
+
     }
 
-    // SELECT MENU DATA
     public void menuSelectData() {
         DishData dishData = menu_tableView.getSelectionModel().getSelectedItem();
         int num = menu_tableView.getSelectionModel().getSelectedIndex();
@@ -637,8 +658,546 @@ public class MenuController implements Initializable {
         menuitems_imageview.setImage(image);
     }
 
+//    EMPLOYESS
 
-    // SHOW TYPE FROM COMBOBOX
+    public void empAddBtn() throws SQLException {
+        if (employees_name.getText().isEmpty()
+                || employees_department.getSelectionModel().getSelectedItem() == null
+                || employees_pos.getSelectionModel().getSelectedItem() == null
+                || employees_salary.getText().isEmpty()
+                || data.path == null) {
+
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please fill all blank fields");
+            alert.showAndWait();
+
+        } else {
+            String sql = "INSERT INTO employee"
+                    + "(emp_name, position, department, salary, image)"
+                    + "VALUES(?,?,?,?,?)";
+            connection = JDBCConnect.getJDBCConnection();
+            try {
+                preparedStatement = connection.prepareStatement(sql);
+                preparedStatement.setString(1, employees_name.getText());
+                preparedStatement.setString(2, (String) employees_pos.getSelectionModel().getSelectedItem());
+                preparedStatement.setString(3, (String) employees_department.getSelectionModel().getSelectedItem());
+                preparedStatement.setDouble(4, Double.parseDouble(employees_salary.getText()));
+
+
+                String path = data.path;
+                path = path.replace("\\", "\\\\");
+
+                preparedStatement.setString(5, path);
+
+                preparedStatement.executeUpdate();
+
+                alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Information Message");
+                alert.setHeaderText(null);
+                alert.setContentText("Successfully Added!");
+                alert.showAndWait();
+                empShowData();
+                empClearBtn();
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void empUpdateBtn() throws SQLException {
+        if (employees_name.getText().isEmpty()
+                || employees_department.getSelectionModel().getSelectedItem() == null
+                || employees_pos.getSelectionModel().getSelectedItem() == null
+                || employees_salary.getText().isEmpty()
+                || data.path == null
+                || data.id == 0) {
+
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please fill all blank fields");
+            alert.showAndWait();
+
+        } else {
+
+            String path = data.path;
+            path = path.replace("\\", "\\\\");
+
+            String updateData = "UPDATE employee SET " +
+                    "emp_name = '" + employees_name.getText() + "', " +
+                    "position = '" + employees_pos.getSelectionModel().getSelectedItem() + "', " +
+                    "department = '" + employees_department.getSelectionModel().getSelectedItem() + "', " +
+                    "salary = '" + employees_salary.getText() + "', " +
+                    "image = '" + path + "' " +
+                    "WHERE emp_ID = " + data.id;
+
+            connection = JDBCConnect.getJDBCConnection();
+
+            try {
+
+                alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Confirmation Message");
+                alert.setHeaderText(null);
+                alert.setContentText("Are you sure want to Update Employees: " + employees_name.getText() + "?");
+                Optional<ButtonType> optional = alert.showAndWait();
+
+                if (optional.get().equals(ButtonType.OK)) {
+
+                    preparedStatement = connection.prepareStatement(updateData);
+                    preparedStatement.executeUpdate();
+
+
+                    alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Information Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Successfully Update");
+                    alert.showAndWait();
+
+                    empShowData();
+                    empClearBtn();
+
+                } else {
+                    alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Updae Faile!");
+                    alert.showAndWait();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void empDeleteBtn() {
+
+        if (data.id == 0) {
+
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please fill all blank fields");
+            alert.showAndWait();
+
+        } else {
+            alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirmation Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Are you sure want to Delete Dish: " + menuitems_dishName.getText() + "?");
+            Optional<ButtonType> optional = alert.showAndWait();
+
+            if (optional.get().equals(ButtonType.OK)) {
+                String sql = "DELETE FROM employee WHERE emp_ID = " + data.id;
+
+                try {
+
+                    preparedStatement = connection.prepareStatement(sql);
+                    preparedStatement.executeUpdate();
+
+                    alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Information Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Successfully Deleted!");
+                    alert.showAndWait();
+
+                    empShowData();
+                    empClearBtn();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error Message");
+                alert.setHeaderText(null);
+                alert.setContentText("Delete Fail");
+                alert.showAndWait();
+            }
+        }
+
+    }
+
+    public void empImportBtn() {
+        FileChooser openFile = new FileChooser();
+        openFile.getExtensionFilters().add(new FileChooser.ExtensionFilter("Open image File", "*png", "*jpg"));
+
+        File file = openFile.showOpenDialog(mainForm.getScene().getWindow());
+
+        if (file != null) {
+
+            data.path = file.getAbsolutePath();
+            image = new Image(file.toURI().toString(), 120, 151, false, true);
+
+            employees_imageview.setImage(image);
+        }
+    }
+
+    public void empClearBtn() {
+
+        employees_name.setText("");
+        employees_department.getSelectionModel().clearSelection();
+        employees_pos.getSelectionModel().clearSelection();
+        employees_salary.setText("");
+        data.path = "";
+        data.id = 0;
+        employees_imageview.setImage(null);
+
+
+    }
+
+    public ObservableList<EmployeesData> empDataList() {
+        ObservableList<EmployeesData> listData = FXCollections.observableArrayList();
+        String sql = "SELECT * FROM employee";
+
+
+        connection = JDBCConnect.getJDBCConnection();
+
+        try {
+
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+            EmployeesData eData;
+
+            while (resultSet.next()) {
+                eData = new EmployeesData(resultSet.getInt("emp_ID"),
+                        resultSet.getString("emp_name"),
+                        resultSet.getString("position"),
+                        resultSet.getString("department"),
+                        resultSet.getDouble("salary"),
+                        resultSet.getString("image"));
+
+                listData.add(eData);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return listData;
+    }
+
+    private ObservableList<EmployeesData> empListData;
+
+    public void empShowData() {
+
+        empListData = empDataList();
+
+        employees_col_empId.setCellValueFactory(new PropertyValueFactory<>("emp_ID"));
+        employees_col_name.setCellValueFactory(new PropertyValueFactory<>("emp_name"));
+        employees_col_department.setCellValueFactory(new PropertyValueFactory<>("department"));
+        employees_col_position.setCellValueFactory(new PropertyValueFactory<>("position"));
+        employees_col_salary.setCellValueFactory(new PropertyValueFactory<>("salary"));
+
+
+        employess_tableView.setItems(empListData);
+
+
+        FilteredList<EmployeesData> filteredEmp = new FilteredList<>(empListData, b -> true);
+        clients_search.textProperty().addListener((observable, oldValue, newValue) ->{
+            filteredEmp.setPredicate(employeesData -> {
+
+                if (newValue.isEmpty() || newValue.isBlank() || newValue == null){
+                    return true;
+                }
+
+                String searchKeyWord = newValue.toLowerCase();
+
+                if (employeesData.getEmp_name().toLowerCase().indexOf(searchKeyWord) > -1){
+                    return true;
+                } else if (employeesData.getPosition().toLowerCase().indexOf(searchKeyWord) > -1){
+                    return true;
+                } else if (employeesData.getDepartment().toLowerCase().indexOf(searchKeyWord) > -1) {
+                    return true;
+                } else if (employeesData.getSalary().toString().indexOf(searchKeyWord) > -1){
+                    return true;
+                } else
+                    return false;
+
+            });
+
+        });
+
+        SortedList<EmployeesData> sortedList = new SortedList<>(filteredEmp);
+        sortedList.comparatorProperty().bind(employess_tableView.comparatorProperty());
+
+        employess_tableView.setItems(sortedList);
+    }
+
+    public void empSelectData() {
+        EmployeesData employeesData = employess_tableView.getSelectionModel().getSelectedItem();
+        int num = employess_tableView.getSelectionModel().getSelectedIndex();
+
+        if ((num - 1) < -1) return;
+
+        employees_name.setText(employeesData.getEmp_name());
+        employees_salary.setText(String.valueOf(employeesData.getSalary()));
+
+        data.id = employeesData.getEmp_ID();
+        data.path = employeesData.getImage();
+
+        String path = "File:" + employeesData.getImage();
+        image = new Image(path, 120, 151, false, true);
+        employees_imageview.setImage(image);
+    }
+
+//  CLIENT
+public void clientAddBtn() throws SQLException {
+    if (clients_customers.getText().isEmpty() || clients_phonenumber.getText().isEmpty()){
+
+        alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error Message");
+        alert.setHeaderText(null);
+        alert.setContentText("Please fill all blank fields");
+        alert.showAndWait();
+
+    } else {
+        String insertClients = "INSERT INTO client"
+                + "(client_name, phone,dob)"
+                + "VALUES(?,?,?)";
+        connection = JDBCConnect.getJDBCConnection();
+        try {
+            preparedStatement = connection.prepareStatement(insertClients);
+            preparedStatement.setString(1, clients_customers.getText());
+            preparedStatement.setString(2, clients_phonenumber.getText());
+
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+            java.util.Date date = simpleDateFormat.parse(clients_dob.getText());
+            java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+            preparedStatement.setString(3, String.valueOf(sqlDate));
+
+            preparedStatement.executeUpdate();
+
+            alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Information Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Successfully Added!");
+            alert.showAndWait();
+            clientShowData();
+            clientClearBtn();
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+    public void clientUpdateBtn() throws SQLException {
+        if (clients_customers.getText().isEmpty()
+                || clients_phonenumber.getText().isEmpty()
+                || data.id == 0) {
+
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please fill all blank fields");
+            alert.showAndWait();
+
+        } else {
+
+
+
+            String updateClients = "UPDATE client SET client_name = ?, phone = ?, dob = ? WHERE client_ID = " + data.id;
+
+            connection = JDBCConnect.getJDBCConnection();
+
+            try {
+
+                alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Confirmation Message");
+                alert.setHeaderText(null);
+                alert.setContentText("Are you sure want to Update Employees: " + employees_name.getText() + "?");
+                Optional<ButtonType> optional = alert.showAndWait();
+
+                if (optional.get().equals(ButtonType.OK)) {
+
+                    preparedStatement = connection.prepareStatement(updateClients);
+                    preparedStatement.setString(1, clients_customers.getText());
+                    preparedStatement.setString(2, clients_phonenumber.getText());
+
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+                    java.util.Date date = simpleDateFormat.parse(clients_dob.getText());
+                    java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+                    preparedStatement.setString(3, String.valueOf(sqlDate));
+
+                    preparedStatement.executeUpdate();
+
+
+                    alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Information Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Successfully Update");
+                    alert.showAndWait();
+
+                    clientShowData();
+                    clientClearBtn();
+
+                } else {
+                    alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Updae Faile!");
+                    alert.showAndWait();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void clientDeleteBtn() {
+
+        if (data.id == 0) {
+
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please fill all blank fields");
+            alert.showAndWait();
+
+        } else {
+            alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirmation Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Are you sure want to Delete Client: " + menuitems_dishName.getText() + "?");
+            Optional<ButtonType> optional = alert.showAndWait();
+
+            if (optional.get().equals(ButtonType.OK)) {
+                String sql = "DELETE FROM client WHERE client_ID = " + data.id;
+
+                try {
+
+                    preparedStatement = connection.prepareStatement(sql);
+                    preparedStatement.executeUpdate();
+
+                    alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Information Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Successfully Deleted!");
+                    alert.showAndWait();
+
+                    clientShowData();
+                    clientClearBtn();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error Message");
+                alert.setHeaderText(null);
+                alert.setContentText("Delete Fail");
+                alert.showAndWait();
+            }
+        }
+
+    }
+
+    public void clientClearBtn() {
+
+        clients_customers.setText("");
+        clients_phonenumber.setText("");
+        clients_dob.setText("");
+        clients_dob.setText("");
+        data.id = 0;
+
+    }
+
+    public ObservableList<ClientData> clientDataList() {
+        ObservableList<ClientData> clientData = FXCollections.observableArrayList();
+        String sql = "SELECT * FROM client";
+
+
+        connection = JDBCConnect.getJDBCConnection();
+
+        try {
+
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+//            resultSet.first();
+//            count = resultSet.getInt(1);
+            ClientData cData;
+
+            while (resultSet.next()) {
+                cData = new ClientData(resultSet.getInt("client_ID"),
+                        resultSet.getString("client_name"),
+                        resultSet.getString("phone"),
+                        resultSet.getDate("dob"));
+
+                clientData.add(cData);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return clientData;
+    }
+
+    private ObservableList<ClientData> clientListData;
+
+    public void clientShowData() {
+
+        clientListData = clientDataList();
+
+        clients_col_customersId.setCellValueFactory(new PropertyValueFactory<>("client_ID"));
+        clients_col_customers.setCellValueFactory(new PropertyValueFactory<>("client_name"));
+        clients_col_phone.setCellValueFactory(new PropertyValueFactory<>("phone"));
+        clients_col_dob.setCellValueFactory(new PropertyValueFactory<>("dob"));
+
+        client_tableView.setItems(clientListData);
+
+        FilteredList<ClientData> filteredList = new FilteredList<>(clientListData, b -> true);
+        clients_search.textProperty().addListener((observable, oldValue, newValue) ->{
+            filteredList.setPredicate(clientData -> {
+
+                if (newValue.isEmpty() || newValue.isBlank() || newValue == null){
+                    return true;
+                }
+
+                String searchKeyWord = newValue.toLowerCase();
+
+                if (clientData.getClient_name().toLowerCase().indexOf(searchKeyWord) > -1){
+                    return true;
+                } else if (clientData.getPhone().toLowerCase().indexOf(searchKeyWord) > -1){
+                    return true;
+                } else if (clientData.getDob().toString().indexOf(searchKeyWord) > -1) {
+                    return true;
+                } else
+                    return false;
+
+            });
+
+        });
+
+        SortedList<ClientData> sortedList = new SortedList<>(filteredList);
+        sortedList.comparatorProperty().bind(client_tableView.comparatorProperty());
+
+        client_tableView.setItems(sortedList);
+
+    }
+
+    public void clientSelectData() {
+        ClientData clientData = client_tableView.getSelectionModel().getSelectedItem();
+        int num = client_tableView.getSelectionModel().getSelectedIndex();
+
+        if ((num - 1) < -1) return;
+
+        clients_customers.setText(clientData.getClient_name());
+        clients_phonenumber.setText(clientData.getPhone());
+        clients_dob.setText(String.valueOf(clientData.getDob()));
+
+        data.id = clientData.getClient_ID();
+
+
+
+
+    }
+
+    // SHOW  COMBOBOX
     private List<String> typeList() {
         List<String> typeL = new ArrayList<>();
         try {
@@ -673,6 +1232,28 @@ public class MenuController implements Initializable {
         }
         ObservableList listData = FXCollections.observableArrayList(statusL);
         menuitems_status.setItems(listData);
+    }
+
+    private String[] departmentList = {"Kitchen", "Protect", "Serve", "Reception", "Clean"};
+
+    public void empDeparmentList() {
+        List<String> deparmentL = new ArrayList<>();
+        for (String data : departmentList) {
+            deparmentL.add(data);
+        }
+        ObservableList listData = FXCollections.observableArrayList(deparmentL);
+        employees_department.setItems(listData);
+    }
+
+    private String[] positionList = {"Staff", "Manage"};
+
+    public void empPositionList() {
+        List<String> positionL = new ArrayList<>();
+        for (String data : positionList) {
+            positionL.add(data);
+        }
+        ObservableList listData = FXCollections.observableArrayList(positionL);
+        employees_pos.setItems(listData);
     }
 
     private double x = 0;
@@ -864,436 +1445,15 @@ public class MenuController implements Initializable {
     private String[] status = {"Available", "Not Available"};
 
 
-    // CRUD CLIENTS ______________________________________________________________________________________________
-    // GET ALL CLIENTS LIST DATA
-    public ObservableList<Client> clientDataList() {
-        ObservableList<Client> listData = FXCollections.observableArrayList();
-
-        String sql = "SELECT * FROM client";
-
-        try (Connection connection = JDBCConnect.getJDBCConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql);
-             ResultSet rs = preparedStatement.executeQuery()) {
-            Client dClient;
-
-            while (rs.next()) {
-                dClient = new Client(rs.getInt("client_ID"),
-                        rs.getString("client_name"),
-                        rs.getString("phone"),
-                        rs.getDate("dob"));
-
-                listData.add(dClient);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
-        return listData;
-    }
-
-
-    // SHOW CLIENT LIST DATA
-    private ObservableList<Client> clientsListData;
-
-    public void clientShowData() {
-        clientsListData = clientDataList();
-
-        clients_col_customersId.setCellValueFactory(new PropertyValueFactory<>("client_ID"));
-        clients_col_name.setCellValueFactory(new PropertyValueFactory<>("client_name"));
-        clients_col_phonenumber.setCellValueFactory(new PropertyValueFactory<>("phone"));
-        clients_col_dob.setCellValueFactory(new PropertyValueFactory<>("dob"));
-
-        client_tableView.setItems(clientsListData);
-    }
-
-    // SELECT CLIENT DATA
-    public void clientSelectData() {
-        Client client = client_tableView.getSelectionModel().getSelectedItem();
-
-        int num = client_tableView.getSelectionModel().getSelectedIndex();
-        if ((num - 1) < -1) return;
-
-        clients_customers.setText(client.getClient_name());
-        clients_phonenumber.setText(client.getPhone());
-
-        Date dob = client.getDob();
-        if (dob != null) {
-            LocalDate localDate = Instant.ofEpochMilli(dob.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
-            clients_dob.setValue(localDate);
-        }
-
-    }
-
-    // CLEAR FIELD
-    public void clientClearBtn() {
-        clients_customers.setText("");
-        clients_phonenumber.setText("");
-        clients_dob.setValue(null);
-    }
-
-    // ADD CLIENT
-    public void clientAddBtn() throws SQLException {
-
-        if (clients_customers.getText().isEmpty()
-                || clients_phonenumber.getText().isEmpty()
-                || clients_dob.getValue() == null) {
-
-            alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error Message");
-            alert.setHeaderText(null);
-            alert.setContentText("Please fill all blank fields");
-            alert.showAndWait();
-        } else {
-            String checkClientName = "SELECT client_name FROM client WHERE client_name = '" + clients_customers.getText() + "'";
-
-            try (Connection connection = JDBCConnect.getJDBCConnection();
-                 PreparedStatement preparedStatement = connection.prepareStatement(checkClientName);
-                 ResultSet resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText(clients_customers.getText() + " is already taken");
-                    alert.showAndWait();
-                } else {
-                    // INSERT CLIENT
-                    String sqlClient = "INSERT INTO client"
-                            + "(client_name, phone, dob)"
-                            + "VALUES(?, ?, ?)";
-
-                    try (Connection connectionAdd = JDBCConnect.getJDBCConnection();
-                         PreparedStatement preparedStatementAdd = connectionAdd.prepareStatement(sqlClient)) {
-                        preparedStatementAdd.setString(1, clients_customers.getText());
-                        preparedStatementAdd.setString(2, clients_phonenumber.getText());
-
-
-                        LocalDate dob = clients_dob.getValue();
-                        if (dob != null) {
-                            java.sql.Date sqlDate = java.sql.Date.valueOf(dob);
-                            preparedStatementAdd.setDate(3, sqlDate);
-                        } else {
-                            preparedStatementAdd.setNull(3, java.sql.Types.DATE);
-                        }
-
-                        preparedStatementAdd.executeUpdate();
-
-
-                        alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Information Message");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Successfully Added!");
-                        alert.showAndWait();
-
-                        // TO SHOW DATA
-                        clientShowData();
-                        // TO CLEAR THE FIELDS
-                        clientClearBtn();
-
-                    } catch (SQLException e) {
-                        System.out.println(e.getMessage());
-                    }
-
-                }
-
-
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-
-
-    }
-
-
-    // UPDATE CLIENT
-    public void clientUpdateBtn() throws SQLException {
-        if (clients_customers.getText().isEmpty()
-                || clients_phonenumber.getText().isEmpty()
-                || clients_dob.getValue() == null) {
-            alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error Message");
-            alert.setHeaderText(null);
-            alert.setContentText("Please fill all blank fields");
-            alert.showAndWait();
-        } else {
-            String sqlUpdate = "UPDATE client SET " +
-                    "client_name = '" + clients_customers.getText() + "', " +
-                    "phone = '" + clients_phonenumber.getText() + "', " +
-                    "dob = '" + clients_dob.getValue() + "' " +
-                    "WHERE client_name = '" + clients_customers.getText() + "'";
-
-            try (Connection connection = JDBCConnect.getJDBCConnection();
-                 PreparedStatement preparedStatement = connection.prepareStatement(sqlUpdate)) {
-
-                if (clients_customers.getText().isEmpty()
-                        || clients_phonenumber.getText().isEmpty()
-                        || clients_dob.getValue() == null
-                ) {
-                    alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Please fill fields");
-                    alert.showAndWait();
-                } else {
-                    alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Confirm");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Update");
-                    Optional<ButtonType> optional = alert.showAndWait();
-
-                    if (optional.get().equals(ButtonType.OK)) {
-                        preparedStatement.executeUpdate();
-
-                        alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Update");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Updated");
-                        alert.showAndWait();
-
-                        // TO SHOW DATA
-                        clientShowData();
-                        // TO CLEAR THE FIELDS
-                        clientClearBtn();
-                    } else {
-                        alert = new Alert(Alert.AlertType.CONFIRMATION);
-                        alert.setTitle("Cancel");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Cancelled");
-                        alert.showAndWait();
-                    }
-                }
-
-
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
-
-
-        }
-    }
-
-    // DELETE CLIENT
-    public void clientDeleteBtn() {
-        String sqlDelete = "DELETE FROM client WHERE client_name = '" + clients_customers.getText() + "'";
-
-        try (Connection connection = JDBCConnect.getJDBCConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sqlDelete)) {
-
-            if (clients_customers.getText().isEmpty()
-                    || clients_phonenumber.getText().isEmpty()
-                    || clients_dob.getValue() == null
-            ) {
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText(null);
-                alert.setContentText("Please fill fields");
-                alert.showAndWait();
-            } else {
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirm");
-                alert.setHeaderText(null);
-                alert.setContentText("Update");
-                Optional<ButtonType> optional = alert.showAndWait();
-
-                if (optional.get().equals(ButtonType.OK)) {
-                    preparedStatement.executeUpdate();
-
-                    alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Update");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Updated");
-                    alert.showAndWait();
-
-                    // TO SHOW DATA
-                    clientShowData();
-                    // TO CLEAR THE FIELDS
-                    clientClearBtn();
-                } else {
-                    alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Cancel");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Cancelled");
-                    alert.showAndWait();
-                }
-            }
-
-
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-
-    // CRUD EMPLOYEE _____________________________________________________________________________________________________
-    // GET ALL EMPLOYEES LIST DATA
-    public ObservableList<Employee> employeeDataList() {
-        ObservableList<Employee> listData = FXCollections.observableArrayList();
-
-        String sql = "SELECT * FROM employee";
-
-        try (Connection connection = JDBCConnect.getJDBCConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql);
-             ResultSet rs = preparedStatement.executeQuery()) {
-
-            Employee dEmployee;
-            while (rs.next()) {
-                dEmployee = new Employee(rs.getInt("emp_ID"),
-                        rs.getString("emp_name"),
-                        rs.getDouble("salary"),
-                        rs.getString("position"));
-
-                listData.add(dEmployee);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
-        return listData;
-    }
-
-    // SHOW EMPLOYEE LIST DATA
-    private ObservableList<Employee> employeesListData;
-
-    public void employeeShowData() {
-        employeesListData = employeeDataList();
-
-        employees_col_empId.setCellValueFactory(new PropertyValueFactory<>("emp_ID"));
-        employees_col_name.setCellValueFactory(new PropertyValueFactory<>("emp_name"));
-        employees_col_salary.setCellValueFactory(new PropertyValueFactory<>("salary"));
-        employees_col_position.setCellValueFactory(new PropertyValueFactory<>("position"));
-
-        employess_tableView.setItems(employeesListData);
-    }
-
-    // SELECT EMPLOYEE DATA
-    public void employeeSelectData() {
-        Employee employee = employess_tableView.getSelectionModel().getSelectedItem();
-
-        int num = employess_tableView.getSelectionModel().getSelectedIndex();
-        if ((num - 1) < -1) return;
-
-        employees_name.setText(employee.getEmp_name());
-        employees_salary.setText(String.valueOf(employee.getSalary()));
-        employees_position.setText(employee.getPosition());
-
-    }
-
-    // CLEAR FIELD
-    public void employeeClearBtn() {
-        employees_name.setText("");
-        employees_salary.setText("");
-        employees_position.setText("");
-    }
-
-    // ADD EMPLOYEE
-    public void employeeAddBtn() {
-        if (employees_name.getText().isEmpty()
-                || employees_salary.getText().isEmpty()
-                || employees_position.getText().isEmpty()) {
-
-            alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error Message");
-            alert.setHeaderText(null);
-            alert.setContentText("Please fill all blank fields");
-            alert.showAndWait();
-        }
-        else {
-            String checkEmployee = "SELECT emp_name FROM employee";
-
-            try (Connection connection = JDBCConnect.getJDBCConnection();
-                 PreparedStatement preparedStatement = connection.prepareStatement(checkEmployee);
-                 ResultSet resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText(employees_name.getText() + " is already taken");
-                    alert.showAndWait();
-                } else {
-                    // INSERT EMPLOYEE
-                    String sqlEmployee = "INSERT INTO employees_name"
-                            + "(emp_name, salary, position)"
-                            + "VALUES(?, ?, ?)";
-
-                    try (Connection connectionAdd = JDBCConnect.getJDBCConnection();
-                         PreparedStatement preparedStatementAdd = connectionAdd.prepareStatement(sqlEmployee)) {
-
-                        preparedStatementAdd.setString(1, employees_name.getText());
-                        preparedStatementAdd.setString(2, employees_salary.getText());
-                        preparedStatementAdd.setString(3, employees_position.getText());
-
-                        preparedStatementAdd.executeUpdate();
-
-
-                        alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Information Message");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Successfully Added!");
-                        alert.showAndWait();
-
-
-                        // TO SHOW DATA
-                        employeeShowData();
-                        // TO CLEAR THE FIELDS
-                        employeeClearBtn();
-
-                    } catch (SQLException e) {
-                        System.out.println(e.getMessage());
-                    }
-
-                }
-
-
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-
-
-    }
-
-    // UPDATE EMPLOYEE
-    public void employeeUpdateBtn() {
-        if (employees_name.getText().isEmpty()
-                || employees_salary.getText().isEmpty()
-                || employees_position.getText().isEmpty()) {
-
-            alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error Message");
-            alert.setHeaderText(null);
-            alert.setContentText("Please fill all blank fields");
-            alert.showAndWait();
-        }
-        else {
-            String sqlUpdate = "UPDATE employee SET " +
-                    "emp_name = '" + employees_name.getText() + "', " +
-                    "salary = '" + employees_salary.getText() + "', " +
-                    "position = '" + employees_position.getText() + "' " +
-                    "WHERE client_name = '" + clients_customers.getText() + "'";
-
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         displayUsername();
         menuTypeList();
         menuStatusList();
         menuShowData();
-
+        empDeparmentList();
+        empPositionList();
+        empShowData();
         clientShowData();
-
-        employeeShowData();
     }
 }
