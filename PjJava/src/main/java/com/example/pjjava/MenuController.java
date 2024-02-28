@@ -1521,11 +1521,11 @@ public void clientAddBtn() throws SQLException {
     }
 
     // ORDERS LIST DATA
-    public ObservableList<Order> orderListData() {
-        ObservableList<Order> listData = FXCollections.observableArrayList();
-
-        
-    }
+//    public ObservableList<Order> orderListData() {
+//        ObservableList<Order> listData = FXCollections.observableArrayList();
+//
+//
+//    }
 
 
 
