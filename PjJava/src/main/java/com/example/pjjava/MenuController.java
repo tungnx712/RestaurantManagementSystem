@@ -305,6 +305,29 @@ public class MenuController implements Initializable {
     @FXML
     private Label username;
 
+    @FXML
+    private Button tablesAddBtn;
+
+    @FXML
+    private TableColumn<?, ?> tablesColAmount;
+
+    @FXML
+    private TableColumn<?, ?> tablesColDishName;
+
+    @FXML
+    private TableColumn<?, ?> tablesColQuantity;
+
+    @FXML
+    private Button tablesDeleteBtn;
+
+    @FXML
+    private ComboBox<String> tablesDishName;
+
+    @FXML
+    private Spinner<Integer> tablesQuantity;
+
+    @FXML
+    private ComboBox<?> tablesTypeDish;
 
     Alert alert;
     private Connection connection;
@@ -1444,6 +1467,70 @@ public void clientAddBtn() throws SQLException {
     // AVAILABLE FOODS/DRINKS
     private String[] status = {"Available", "Not Available"};
 
+    // TABLES -------------------------------------------------------------------------------------------------------
+    // SHOW TYPE DISH FROM COMBOBOX
+    public void tablesTypeList() {
+        List<String> typeL = typeList();
+        ObservableList listData = FXCollections.observableArrayList(typeL);
+        tablesTypeDish.setItems(listData);
+    }
+
+    // GET ALL DISH NAME FROM COMBOBOX
+    public void tablesDishNameList(String selectedType) {
+        String sql = "SELECT dish.dish_name FROM dish " +
+                "JOIN types_dish ON dish.dish_ID = types_dish.dish_ID " +
+                "JOIN types ON types_dish.type_ID = types.type_ID " +
+                "WHERE types.type_name = ?";
+
+        try (Connection connection = JDBCConnect.getJDBCConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, selectedType);
+
+            List<String> dishNames = new ArrayList<>();
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                while (rs.next()) {
+                    String dishName = rs.getString("dish_name");
+                    dishNames.add(dishName);
+                }
+            }
+
+            ObservableList<String> listData = FXCollections.observableArrayList(dishNames);
+            tablesDishName.setItems(listData);
+            System.out.println(selectedType);
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    // TABLES SPINNER
+    private SpinnerValueFactory<Integer> spinner;
+    public void tablesSpinner() {
+        spinner = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 50, 0);
+        tablesQuantity.setValueFactory(spinner);
+    }
+
+    // TABLES QUANTITY
+    private int qty;
+    public void tablesQuantity() {
+        qty = tablesQuantity.getValue();
+
+        System.out.println(qty);
+    }
+
+    // ORDERS LIST DATA
+    public ObservableList<Order> orderListData() {
+        ObservableList<Order> listData = FXCollections.observableArrayList();
+
+        
+    }
+
+
+
+
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -1451,9 +1538,18 @@ public void clientAddBtn() throws SQLException {
         menuTypeList();
         menuStatusList();
         menuShowData();
+
         empDeparmentList();
         empPositionList();
         empShowData();
+
         clientShowData();
+
+        tablesTypeList();
+        tablesTypeDish.setOnAction(e -> {
+            String seletedType = String.valueOf(tablesTypeDish.getValue());
+            tablesDishNameList(seletedType);
+        });
+        tablesSpinner();
     }
 }
