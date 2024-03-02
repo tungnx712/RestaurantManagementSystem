@@ -107,8 +107,15 @@
 .shadow{
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 5,0,0,0);
 }
+
 .white-bg{
     -fx-background-color: #fff;
+}
+.green-bg {
+    -fx-background-color: limegreen;
+}
+.red-bg {
+    -fx-background-color: red;
 }
 .btn{
     -fx-background-color: linear-gradient(to bottom right,#ecdbc4 ,#eaa649);

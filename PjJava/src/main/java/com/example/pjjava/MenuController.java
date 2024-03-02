@@ -19,11 +19,14 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
 import java.text.SimpleDateFormat;
@@ -94,7 +97,8 @@ public class MenuController implements Initializable {
 
     @FXML
     private Label dashboardNOC;
-
+    @FXML
+    private AnchorPane abc;
     @FXML
     private BarChart<?, ?> dashboardNOCChart;
 
@@ -109,7 +113,10 @@ public class MenuController implements Initializable {
 
     @FXML
     private AnchorPane employeesForm;
-
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private AnchorPane tableAnchorPane;
     @FXML
     private Button employees_addBtn;
 
@@ -335,6 +342,7 @@ public class MenuController implements Initializable {
     private Statement statement;
     private ResultSet resultSet;
     private Image image;
+    private Parent root;
 
 
     public void menuAddBtn() throws SQLException {
@@ -1527,29 +1535,70 @@ public void clientAddBtn() throws SQLException {
 //
 //    }
 
+    public void tableHandle(ActionEvent actionEvent) {
+        Button button = (Button) actionEvent.getSource();
+        String tableIdString = button.getId();
+        if (tableIdString != null && !tableIdString.isEmpty()) {
+            int tableId = Integer.parseInt(tableIdString);
+            try (Connection conn = JDBCConnect.getJDBCConnection();
+                 Statement stmt = conn.createStatement()) {
+                String sql = "SELECT status FROM tables WHERE table_ID = " + tableId;
+                ResultSet rs = stmt.executeQuery(sql);
 
-
-
-
-
+                if (rs.next()) {
+                    String status = rs.getString("status");
+                    if (status.equalsIgnoreCase("available")) {
+                        button.setStyle("-fx-background-color: green;");
+                    } else if (status.equalsIgnoreCase("in-use")) {
+                        button.setStyle("-fx-background-color: red;");
+                    }
+                } else {
+                    System.out.println("Table with ID " + tableId + " not found.");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Button ID is null or empty.");
+        }
+    }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         displayUsername();
         menuTypeList();
         menuStatusList();
         menuShowData();
-
         empDeparmentList();
         empPositionList();
         empShowData();
-
         clientShowData();
-
         tablesTypeList();
         tablesTypeDish.setOnAction(e -> {
-            String seletedType = String.valueOf(tablesTypeDish.getValue());
-            tablesDishNameList(seletedType);
+            String selectedType = String.valueOf(tablesTypeDish.getValue());
+            tablesDishNameList(selectedType);
         });
         tablesSpinner();
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("dashboard.fxml"));
+            loader.setController(this);
+            root = loader.load();
+
+            for (int i = 1; i <= 8; i++) {
+                Button button = (Button) root.lookup("#" + i);
+                button.setOnAction(this::tableHandle);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void addToTable(ActionEvent actionEvent) {
+
+    }
+
+    public void deleteFromTable(ActionEvent actionEvent) {
+
     }
 }
