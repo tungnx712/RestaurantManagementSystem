@@ -9,7 +9,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
@@ -19,7 +18,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -31,7 +29,6 @@ import java.net.URL;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.Date;
 
 
 public class MenuController implements Initializable {
@@ -292,7 +289,7 @@ public class MenuController implements Initializable {
     private Button orderRemoveBtn;
 
     @FXML
-    private TableView<?> orderTableView;
+    private TableView<Order> orderTableView;
 
     @FXML
     private Pagination menu_pagination;
@@ -1524,22 +1521,16 @@ public void clientAddBtn() throws SQLException {
     private int qty;
     public void tablesQuantity() {
         qty = tablesQuantity.getValue();
-
         System.out.println(qty);
     }
-
-    // ORDERS LIST DATA
-//    public ObservableList<Order> orderListData() {
-//        ObservableList<Order> listData = FXCollections.observableArrayList();
-//
-//
-//    }
-
     public void tableHandle(ActionEvent actionEvent) {
         Button button = (Button) actionEvent.getSource();
         String tableIdString = button.getId();
+        showTableOrders();
+        showTotalAmount();
         if (tableIdString != null && !tableIdString.isEmpty()) {
             int tableId = Integer.parseInt(tableIdString);
+            setTableId(tableId);
             try (Connection conn = JDBCConnect.getJDBCConnection();
                  Statement stmt = conn.createStatement()) {
                 String sql = "SELECT status FROM tables WHERE table_ID = " + tableId;
@@ -1562,6 +1553,94 @@ public void clientAddBtn() throws SQLException {
             System.out.println("Button ID is null or empty.");
         }
     }
+    private int tableId;
+
+    private void setTableId (int tableId) {
+        this.tableId = tableId;
+    }
+    private int getTableId() {
+        return tableId;
+    }
+
+    public void addToTable(ActionEvent actionEvent) {
+        String dishName = tablesDishName.getValue();
+        int quantity = tablesQuantity.getValue();
+        try (Connection conn = JDBCConnect.getJDBCConnection()) {
+
+            String sql = "INSERT INTO orders (table_id, dish_name, quantity) VALUES (?, ?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, getTableId());
+            stmt.setString(2, dishName);
+            stmt.setInt(3, quantity);
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        showTableOrders();
+        changeTableStatus(tableId,"in-use");
+
+    }
+    public void deleteFromTable(ActionEvent actionEvent) {
+        try (Connection conn = JDBCConnect.getJDBCConnection();
+             Statement stmt = conn.createStatement()) {
+            String sql = "DELETE FROM orders WHERE table_id = " + tableId;
+            int rowsAffected = stmt.executeUpdate(sql);
+            if (rowsAffected > 0) {
+                showTableOrders();
+                changeTableStatus(tableId,"available");
+            } else {
+                System.out.println("No orders found for table with ID " + tableId);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void showTableOrders() {
+        ObservableList<Order> orderItems = FXCollections.observableArrayList();
+
+        try (Connection conn = JDBCConnect.getJDBCConnection();
+             Statement stmt = conn.createStatement()) {
+            String sql = "SELECT o.dish_name, o.quantity, d.price * o.quantity AS amount " +
+                    "FROM orders o " +
+                    "JOIN dish d ON o.dish_name = d.dish_name " +
+                    "WHERE o.table_id =" + tableId;
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()) {
+                String dishName = rs.getString("dish_name");
+                int quantity = rs.getInt("quantity");
+                double amount = rs.getDouble("amount");
+                orderItems.add(new Order(dishName, quantity, amount));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        tablesColDishName.setCellValueFactory(new PropertyValueFactory<>("dish_name"));
+        tablesColQuantity.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        tablesColAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        orderTableView.setItems(orderItems);
+        System.out.println(orderItems);
+    }
+    public void changeTableStatus(int tableId, String newStatus) {
+        try (Connection conn = JDBCConnect.getJDBCConnection();
+             PreparedStatement pstmt = conn.prepareStatement("UPDATE tables SET status = ? WHERE table_ID = ?")) {
+            pstmt.setString(1, newStatus);
+            pstmt.setInt(2, tableId);
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Table status updated successfully.");
+            } else {
+                System.out.println("No table found with ID " + tableId);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         displayUsername();
@@ -1592,13 +1671,77 @@ public void clientAddBtn() throws SQLException {
             e.printStackTrace();
         }
     }
+    @FXML
+    private Label totalAmount;
 
-
-    public void addToTable(ActionEvent actionEvent) {
-
+    public void showTotalAmount() {
+        double totalAmountValue = calculateTotalAmount();
+        totalAmount.setText(String.format("%.2f", totalAmountValue));
     }
 
-    public void deleteFromTable(ActionEvent actionEvent) {
 
+    private double calculateTotalAmount() {
+        double totalAmount = 0.0;
+
+        try (Connection conn = JDBCConnect.getJDBCConnection();
+             Statement stmt = conn.createStatement()) {
+            String sql = "SELECT SUM(d.price * o.quantity) AS total " +
+                    "FROM orders o " +
+                    "JOIN dish d ON o.dish_name = d.dish_name " +
+                    "WHERE o.table_id = " + tableId;
+            ResultSet rs = stmt.executeQuery(sql);
+
+            if (rs.next()) {
+                totalAmount = rs.getDouble("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return totalAmount;
+    }
+
+    public void payHandle(ActionEvent actionEvent) {
+        try (Connection conn = JDBCConnect.getJDBCConnection();
+             Statement stmt = conn.createStatement()) {
+            String deleteOrderSql = "DELETE FROM orders WHERE table_id = " + tableId;
+            stmt.executeUpdate(deleteOrderSql);
+            String updateTableSql = "UPDATE tables SET status = 'available' WHERE table_id = " + tableId;
+            stmt.executeUpdate(updateTableSql);
+            System.out.println("Payment processed successfully for table ID: " + tableId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private TextField cashInput;
+    @FXML
+    private Label changeLabel;
+    @FXML
+    private void calculateChange(ActionEvent event) {
+        try {
+            double cash = Double.parseDouble(cashInput.getText()); // Lấy số tiền từ TextField
+            double total = Double.parseDouble(totalAmount.getText()); // Lấy tổng số tiền từ Label
+
+            if (cash >= total) { // Kiểm tra nếu số tiền nhập vào lớn hơn hoặc bằng tổng số tiền
+                double change = cash - total; // Tính số tiền thừa
+                changeLabel.setText(String.valueOf(change)); // Hiển thị số tiền thừa trên Label
+            } else {
+                // Nếu số tiền nhập vào nhỏ hơn tổng số tiền, hiển thị thông báo
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Warning");
+                alert.setHeaderText("Cash amount is insufficient");
+                alert.setContentText("Please enter a higher amount of cash.");
+                alert.showAndWait();
+            }
+        } catch (NumberFormatException e) {
+            // Xử lý nếu nhập không phải là số
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Invalid input");
+            alert.setContentText("Please enter a valid cash amount.");
+            alert.showAndWait();
+        }
     }
 }

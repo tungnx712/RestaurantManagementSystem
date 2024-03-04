@@ -1,49 +1,54 @@
 package com.example.pjjava;
 
 public class Order {
-    private String table_ID;
-    private String dish_ID;
-    private Integer quantity;
+    private String dish_name;
+    private int quantity;
+    private double amount;
 
     public Order() {
     }
 
-    public Order(String table_ID, String dish_ID, Integer quantity) {
-        this.table_ID = table_ID;
-        this.dish_ID = dish_ID;
+    public Order( String dish_name, int quantity, double amount) {
+
+        this.dish_name = dish_name;
         this.quantity = quantity;
+        this.amount = amount;
     }
 
-    public String getTable_ID() {
-        return table_ID;
+
+
+
+
+    public String getDish_name() {
+        return dish_name;
     }
 
-    public void setTable_ID(String table_ID) {
-        this.table_ID = table_ID;
+    public void setDish_name(String dish_name) {
+        this.dish_name = dish_name;
     }
 
-    public String getDish_ID() {
-        return dish_ID;
-    }
-
-    public void setDish_ID(String dish_ID) {
-        this.dish_ID = dish_ID;
-    }
-
-    public Integer getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
     }
 
     @Override
     public String toString() {
         return "Order{" +
-                "table_ID='" + table_ID + '\'' +
-                ", dish_ID='" + dish_ID + '\'' +
+                ", dish_name='" + dish_name + '\'' +
                 ", quantity=" + quantity +
+                ", amount=" + amount +
                 '}';
     }
 }

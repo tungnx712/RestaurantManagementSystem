@@ -211,46 +211,46 @@
                                             <children>
                                                 <AnchorPane prefHeight="624.0" prefWidth="271.2" styleClass="white-bg" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
-                                           <Button id = "1" layoutX="23.0" layoutY="27.0" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Table 1" style="-fx-font-weight: bold;"  onAction="#tableHandle">
+                                           <Button id="1" layoutX="23.0" layoutY="27.0" mnemonicParsing="false" onAction="#tableHandle" prefHeight="100.0" prefWidth="100.0" style="-fx-font-weight: bold;" text="Table 1">
                                                <font>
                                                    <Font size="14.0" />
                                                </font>
                                            </Button>
 
-                                           <Button id = "2" layoutX="153.0" layoutY="27.0" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Table 2" style="-fx-font-weight: bold;"  onAction="#tableHandle">
+                                           <Button id="2" layoutX="153.0" layoutY="27.0" mnemonicParsing="false" onAction="#tableHandle" prefHeight="100.0" prefWidth="100.0" style="-fx-font-weight: bold;" text="Table 2">
                                                <font>
                                                    <Font size="14.0" />
                                                </font>
                                            </Button>
-                                           <Button id = "3" layoutX="23.0" layoutY="173.0" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Table 3" style="-fx-font-weight: bold;"  onAction="#tableHandle">
-                                               <font>
-                                                   <Font size="14.0" />
-                                               </font>
-                                           </Button>
-
-                                           <Button id = "4" layoutX="153.0" layoutY="173.0" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Table 4" style="-fx-font-weight: bold;"  onAction="#tableHandle">
-                                               <font>
-                                                   <Font size="14.0" />
-                                               </font>
-                                           </Button>
-                                           <Button id = "5" layoutX="23.0" layoutY="323.0" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Table 5" style="-fx-font-weight: bold;"  onAction="#tableHandle">
+                                           <Button id="3" layoutX="23.0" layoutY="173.0" mnemonicParsing="false" onAction="#tableHandle" prefHeight="100.0" prefWidth="100.0" style="-fx-font-weight: bold;" text="Table 3">
                                                <font>
                                                    <Font size="14.0" />
                                                </font>
                                            </Button>
 
-                                           <Button id = "6" layoutX="153.0" layoutY="323.0" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Table 6" style="-fx-font-weight: bold;"  onAction="#tableHandle">
+                                           <Button id="4" layoutX="153.0" layoutY="173.0" mnemonicParsing="false" onAction="#tableHandle" prefHeight="100.0" prefWidth="100.0" style="-fx-font-weight: bold;" text="Table 4">
                                                <font>
                                                    <Font size="14.0" />
                                                </font>
                                            </Button>
-                                           <Button id = "7" layoutX="23.0" layoutY="475.0" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Table 7" style="-fx-font-weight: bold;"  onAction="#tableHandle">
+                                           <Button id="5" layoutX="23.0" layoutY="323.0" mnemonicParsing="false" onAction="#tableHandle" prefHeight="100.0" prefWidth="100.0" style="-fx-font-weight: bold;" text="Table 5">
                                                <font>
                                                    <Font size="14.0" />
                                                </font>
                                            </Button>
 
-                                           <Button id = "8" layoutX="153.0" layoutY="475.0" mnemonicParsing="false" prefHeight="100.0" prefWidth="100.0" text="Table 8" style="-fx-font-weight: bold;"  onAction="#tableHandle">
+                                           <Button id="6" layoutX="153.0" layoutY="323.0" mnemonicParsing="false" onAction="#tableHandle" prefHeight="100.0" prefWidth="100.0" style="-fx-font-weight: bold;" text="Table 6">
+                                               <font>
+                                                   <Font size="14.0" />
+                                               </font>
+                                           </Button>
+                                           <Button id="7" layoutX="23.0" layoutY="475.0" mnemonicParsing="false" onAction="#tableHandle" prefHeight="100.0" prefWidth="100.0" style="-fx-font-weight: bold;" text="Table 7">
+                                               <font>
+                                                   <Font size="14.0" />
+                                               </font>
+                                           </Button>
+
+                                           <Button id="8" layoutX="153.0" layoutY="475.0" mnemonicParsing="false" onAction="#tableHandle" prefHeight="100.0" prefWidth="100.0" style="-fx-font-weight: bold;" text="Table 8">
                                                <font>
                                                    <Font size="14.0" />
                                                </font>
@@ -270,11 +270,11 @@
                                                 <ComboBox fx:id="tablesDishName" layoutX="88.0" layoutY="49.0" prefHeight="26.0" prefWidth="119.0" promptText="Choose" />
                                                 <Label alignment="CENTER_RIGHT" layoutX="8.0" layoutY="87.0" prefHeight="28.0" prefWidth="67.0" text="Quantity:" textAlignment="RIGHT" />
                                                 <Spinner fx:id="tablesQuantity" layoutX="89.0" layoutY="88.0" onMouseClicked="#tablesQuantity" prefHeight="26.0" prefWidth="78.0" />
-                                                <Button onAction="#addToTable" fx:id="tablesAddBtn" layoutX="222.0" layoutY="22.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="86.0" styleClass="btn" stylesheets="@dashboard.css" text="Add" />
-                                                <Button onAction="#deleteFromTable" fx:id="tablesDeleteBtn" layoutX="222.0" layoutY="68.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="86.0" styleClass="btn" stylesheets="@dashboard.css" text="Delete" />
+                                                <Button fx:id="tablesAddBtn" layoutX="222.0" layoutY="22.0" mnemonicParsing="false" onAction="#addToTable" prefHeight="38.0" prefWidth="86.0" styleClass="btn" stylesheets="@dashboard.css" text="Add" />
+                                                <Button fx:id="tablesDeleteBtn" layoutX="222.0" layoutY="68.0" mnemonicParsing="false" onAction="#deleteFromTable" prefHeight="38.0" prefWidth="86.0" styleClass="btn" stylesheets="@dashboard.css" text="Delete" />
                                                 <AnchorPane layoutX="4.0" layoutY="128.0" prefHeight="490.0" prefWidth="360.0">
                                                     <children>
-                                                        <TableView layoutX="1.0" layoutY="6.0" prefHeight="490.0" prefWidth="358.0">
+                                                        <TableView fx:id="orderTableView" layoutX="1.0" layoutY="6.0" prefHeight="490.0" prefWidth="358.0">
                                                             <columns>
                                                                 <TableColumn fx:id="tablesColDishName" prefWidth="151.20001220703125" text="Dish Name" />
                                                                 <TableColumn fx:id="tablesColQuantity" prefWidth="84.79998779296875" text="Quantity" />
@@ -293,18 +293,18 @@
                                                         <Font name="System Bold" size="14.0" />
                                                     </font>
                                                 </Label>
-                                                <Label layoutX="17.0" layoutY="283.0" prefHeight="30.0" prefWidth="99.0" text="0">
+                                                <Label fx:id="totalAmount" layoutX="17.0" layoutY="283.0" prefHeight="30.0" prefWidth="99.0" text="0">
                                                     <font>
                                                         <Font size="17.0" />
                                                     </font>
                                                 </Label>
-                                                <Button layoutX="47.0" layoutY="454.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="86.0" styleClass="btn" stylesheets="@dashboard.css" text="Pay" />
+                                                <Button layoutX="47.0" layoutY="454.0" mnemonicParsing="false" onAction="#payHandle" prefHeight="38.0" prefWidth="86.0" styleClass="btn" stylesheets="@dashboard.css" text="Pay" />
                                                 <Button layoutX="47.0" layoutY="507.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="86.0" styleClass="btn" stylesheets="@dashboard.css" text="Receipt" />
                                                 <Button layoutX="47.0" layoutY="557.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="86.0" styleClass="btn" stylesheets="@dashboard.css" text="Remove" />
                                                 <Label layoutX="12.0" layoutY="323.0" prefHeight="20.0" prefWidth="70.0" text="CASH:" />
-                                                <TextField layoutX="16.0" layoutY="350.0" prefHeight="26.0" prefWidth="107.0" />
+                                                <TextField fx:id="cashInput" layoutX="16.0" layoutY="350.0" prefHeight="26.0" prefWidth="107.0" />
                                                 <Label layoutX="13.0" layoutY="377.0" prefHeight="20.0" prefWidth="79.0" text="CHANGE:" />
-                                                <Label layoutX="22.0" layoutY="397.0" prefHeight="18.0" prefWidth="91.0" text="0">
+                                                <Label fx:id="changeLabel" layoutX="22.0" layoutY="397.0" prefHeight="18.0" prefWidth="91.0" text="0">
                                                     <font>
                                                         <Font size="15.0" />
                                                     </font>
@@ -316,6 +316,7 @@
                                     <TextField layoutX="16.0" layoutY="82.0" />
                                     <TextField layoutX="18.0" layoutY="133.0" />
                                     <Button layoutX="55.0" layoutY="176.0" mnemonicParsing="false" prefHeight="34.0" prefWidth="74.0" styleClass="btn" stylesheets="@dashboard.css" text="Booking" />
+                                    <Button  onAction="#calculateChange" layoutX="123.0" layoutY="351.0" mnemonicParsing="false" text="Calculate" />
                                             </children>
                                             <styleClass>
                                                 <String fx:value="white-bg" />
