@@ -28,7 +28,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.*;
+import java.util.Date;
 
 
 public class MenuController implements Initializable {
@@ -1700,15 +1702,71 @@ public void clientAddBtn() throws SQLException {
 
         return totalAmount;
     }
+    @FXML
+    private TextField clientPhone;
+    public int getClientId() {
+        int clientId = -1;
+        String clientPhoneText = clientPhone.getText();
+
+        try (Connection conn = JDBCConnect.getJDBCConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT client_ID FROM client WHERE phone = ?")) {
+            pstmt.setString(1, clientPhoneText);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                clientId = rs.getInt("client_ID");
+            } else {
+                System.out.println("not found " + clientPhoneText);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return clientId;
+    }
+
 
     public void payHandle(ActionEvent actionEvent) {
         try (Connection conn = JDBCConnect.getJDBCConnection();
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO bill (client_ID, table_ID, bill_date, total_price) VALUES (?, ?, NOW(), ?)", Statement.RETURN_GENERATED_KEYS)) {
+            int clientId = getClientId();
+
+            if (clientId != -1) {
+                stmt.setInt(1, clientId);
+                stmt.setInt(2, tableId);
+                stmt.setDouble(3, calculateTotalAmount());
+
+                int rowsAffected = stmt.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    ResultSet rs = stmt.getGeneratedKeys();
+                    if (rs.next()) {
+                        int billId = rs.getInt(1);
+                        System.out.println("Payment processed successfully for table ID: " + tableId + ". Bill ID: " + billId);
+                    }
+                    deleteOrdersAndChangeTableStatus();
+                } else {
+                    System.out.println("Payment processing failed for table ID: " + tableId);
+                }
+            } else {
+                System.out.println("Invalid client phone number.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void deleteOrdersAndChangeTableStatus() {
+        try (Connection conn = JDBCConnect.getJDBCConnection();
              Statement stmt = conn.createStatement()) {
+            // Xóa các đơn hàng của bàn
             String deleteOrderSql = "DELETE FROM orders WHERE table_id = " + tableId;
             stmt.executeUpdate(deleteOrderSql);
+
+            // Cập nhật trạng thái của bàn
             String updateTableSql = "UPDATE tables SET status = 'available' WHERE table_id = " + tableId;
             stmt.executeUpdate(updateTableSql);
-            System.out.println("Payment processed successfully for table ID: " + tableId);
+
+            System.out.println("Orders deleted and table status updated for table ID: " + tableId);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -1744,4 +1802,54 @@ public void clientAddBtn() throws SQLException {
             alert.showAndWait();
         }
     }
+
+    public void getReceipt(ActionEvent actionEvent) {
+        int clientId = getClientId();
+        String phone = null;
+        String clientName = null;
+        Date dob = null;
+
+        try (Connection conn = JDBCConnect.getJDBCConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT client_name,phone, dob FROM client WHERE client_ID = ?")) {
+            pstmt.setInt(1, clientId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                clientName = rs.getString("client_name");
+                phone = rs.getString("phone");
+                dob = rs.getDate("dob");
+            } else {
+                System.out.println("Client not found with ID: " + clientId);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        List<Receipt> receipts = new ArrayList<>();
+
+        try (Connection conn = JDBCConnect.getJDBCConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT o.dish_name, o.quantity, d.price * o.quantity AS amount " +
+                     "FROM orders o " +
+                     "JOIN dish d ON o.dish_name = d.dish_name " +
+                     "WHERE o.table_id = ?")) {
+            pstmt.setInt(1, getTableId());
+            ResultSet dishRs = pstmt.executeQuery();
+            double total = 0;
+            while (dishRs.next()) {
+                String dishName = dishRs.getString("dish_name");
+                int quantity = dishRs.getInt("quantity");
+                double dishPrice = dishRs.getDouble("amount");
+                total += dishPrice;
+                Receipt receipt = new Receipt(clientName, phone, String.valueOf(dob), new Date(), getTableId(), dishName, quantity, dishPrice, total);
+                receipts.add(receipt);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (Receipt receipt : receipts) {
+            System.out.println(receipt);
+        }
+    }
+
+
 }
