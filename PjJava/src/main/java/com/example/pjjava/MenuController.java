@@ -1721,14 +1721,14 @@ public void clientAddBtn() throws SQLException {
     @FXML
     private void calculateChange(ActionEvent event) {
         try {
-            double cash = Double.parseDouble(cashInput.getText()); // Lấy số tiền từ TextField
-            double total = Double.parseDouble(totalAmount.getText()); // Lấy tổng số tiền từ Label
+            double cash = Double.parseDouble(cashInput.getText());
+            double total = Double.parseDouble(totalAmount.getText());
 
-            if (cash >= total) { // Kiểm tra nếu số tiền nhập vào lớn hơn hoặc bằng tổng số tiền
-                double change = cash - total; // Tính số tiền thừa
-                changeLabel.setText(String.valueOf(change)); // Hiển thị số tiền thừa trên Label
+            if (cash >= total) {
+                double change = cash - total;
+                changeLabel.setText(String.valueOf(change));
             } else {
-                // Nếu số tiền nhập vào nhỏ hơn tổng số tiền, hiển thị thông báo
+
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Warning");
                 alert.setHeaderText("Cash amount is insufficient");
@@ -1736,7 +1736,7 @@ public void clientAddBtn() throws SQLException {
                 alert.showAndWait();
             }
         } catch (NumberFormatException e) {
-            // Xử lý nếu nhập không phải là số
+
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Invalid input");
