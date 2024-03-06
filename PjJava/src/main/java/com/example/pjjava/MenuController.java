@@ -334,7 +334,22 @@ public class MenuController implements Initializable {
 
     @FXML
     private ComboBox<?> tablesTypeDish;
-
+    @FXML
+    private Button button1;
+    @FXML
+    private Button button2;
+    @FXML
+    private Button button3;
+    @FXML
+    private Button button4;
+    @FXML
+    private Button button5;
+    @FXML
+    private Button button6;
+    @FXML
+    private Button button7;
+    @FXML
+    private Button button8;
     Alert alert;
     private Connection connection;
     private PreparedStatement preparedStatement;
@@ -1525,6 +1540,29 @@ public void clientAddBtn() throws SQLException {
         qty = tablesQuantity.getValue();
         System.out.println(qty);
     }
+
+
+    public void showTableStatus(Button button, int tableId) {
+        try (Connection conn = JDBCConnect.getJDBCConnection();
+             Statement stmt = conn.createStatement()) {
+            String sql = "SELECT status FROM tables WHERE table_ID = " + tableId;
+            ResultSet rs = stmt.executeQuery(sql);
+
+            if (rs.next()) {
+                String status = rs.getString("status");
+                if (status.equalsIgnoreCase("available")) {
+                    button.setStyle("-fx-background-color: green;");
+                } else if (status.equalsIgnoreCase("in-use")) {
+                    button.setStyle("-fx-background-color: red;");
+                }
+            } else {
+                System.out.println("Table with ID " + tableId + " not found.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void tableHandle(ActionEvent actionEvent) {
         Button button = (Button) actionEvent.getSource();
         String tableIdString = button.getId();
@@ -1533,24 +1571,6 @@ public void clientAddBtn() throws SQLException {
         if (tableIdString != null && !tableIdString.isEmpty()) {
             int tableId = Integer.parseInt(tableIdString);
             setTableId(tableId);
-            try (Connection conn = JDBCConnect.getJDBCConnection();
-                 Statement stmt = conn.createStatement()) {
-                String sql = "SELECT status FROM tables WHERE table_ID = " + tableId;
-                ResultSet rs = stmt.executeQuery(sql);
-
-                if (rs.next()) {
-                    String status = rs.getString("status");
-                    if (status.equalsIgnoreCase("available")) {
-                        button.setStyle("-fx-background-color: green;");
-                    } else if (status.equalsIgnoreCase("in-use")) {
-                        button.setStyle("-fx-background-color: red;");
-                    }
-                } else {
-                    System.out.println("Table with ID " + tableId + " not found.");
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         } else {
             System.out.println("Button ID is null or empty.");
         }
@@ -1568,21 +1588,23 @@ public void clientAddBtn() throws SQLException {
         String dishName = tablesDishName.getValue();
         int quantity = tablesQuantity.getValue();
         try (Connection conn = JDBCConnect.getJDBCConnection()) {
-
             String sql = "INSERT INTO orders (table_id, dish_name, quantity) VALUES (?, ?, ?)";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, getTableId());
             stmt.setString(2, dishName);
             stmt.setInt(3, quantity);
             stmt.executeUpdate();
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
         showTableOrders();
-        changeTableStatus(tableId,"in-use");
+        changeTableStatus(tableId, "in-use");
 
+        for (int i = 0; i < tableButtons.size(); i++) {
+            showTableStatus(tableButtons.get(i), i + 1);
+        }
     }
+
     public void deleteFromTable(ActionEvent actionEvent) {
         try (Connection conn = JDBCConnect.getJDBCConnection();
              Statement stmt = conn.createStatement()) {
@@ -1590,12 +1612,16 @@ public void clientAddBtn() throws SQLException {
             int rowsAffected = stmt.executeUpdate(sql);
             if (rowsAffected > 0) {
                 showTableOrders();
-                changeTableStatus(tableId,"available");
+                changeTableStatus(tableId, "available");
             } else {
                 System.out.println("No orders found for table with ID " + tableId);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+
+        for (int i = 0; i < tableButtons.size(); i++) {
+            showTableStatus(tableButtons.get(i), i + 1);
         }
     }
 
@@ -1638,38 +1664,6 @@ public void clientAddBtn() throws SQLException {
                 System.out.println("No table found with ID " + tableId);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        displayUsername();
-        menuTypeList();
-        menuStatusList();
-        menuShowData();
-        empDeparmentList();
-        empPositionList();
-        empShowData();
-        clientShowData();
-        tablesTypeList();
-        tablesTypeDish.setOnAction(e -> {
-            String selectedType = String.valueOf(tablesTypeDish.getValue());
-            tablesDishNameList(selectedType);
-        });
-        tablesSpinner();
-
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("dashboard.fxml"));
-            loader.setController(this);
-            root = loader.load();
-
-            for (int i = 1; i <= 8; i++) {
-                Button button = (Button) root.lookup("#" + i);
-                button.setOnAction(this::tableHandle);
-            }
-        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -1724,7 +1718,6 @@ public void clientAddBtn() throws SQLException {
         return clientId;
     }
 
-
     public void payHandle(ActionEvent actionEvent) {
         try (Connection conn = JDBCConnect.getJDBCConnection();
              PreparedStatement stmt = conn.prepareStatement("INSERT INTO bill (client_ID, table_ID, bill_date, total_price) VALUES (?, ?, NOW(), ?)", Statement.RETURN_GENERATED_KEYS)) {
@@ -1748,7 +1741,11 @@ public void clientAddBtn() throws SQLException {
                     System.out.println("Payment processing failed for table ID: " + tableId);
                 }
             } else {
-                System.out.println("Invalid client phone number.");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Invalid client phone number.");
+                alert.showAndWait();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1758,17 +1755,18 @@ public void clientAddBtn() throws SQLException {
     private void deleteOrdersAndChangeTableStatus() {
         try (Connection conn = JDBCConnect.getJDBCConnection();
              Statement stmt = conn.createStatement()) {
-            // Xóa các đơn hàng của bàn
             String deleteOrderSql = "DELETE FROM orders WHERE table_id = " + tableId;
             stmt.executeUpdate(deleteOrderSql);
 
-            // Cập nhật trạng thái của bàn
             String updateTableSql = "UPDATE tables SET status = 'available' WHERE table_id = " + tableId;
             stmt.executeUpdate(updateTableSql);
 
             System.out.println("Orders deleted and table status updated for table ID: " + tableId);
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+        for (int i = 0; i < tableButtons.size(); i++) {
+            showTableStatus(tableButtons.get(i), i + 1);
         }
     }
 
@@ -1848,6 +1846,50 @@ public void clientAddBtn() throws SQLException {
 
         for (Receipt receipt : receipts) {
             System.out.println(receipt);
+        }
+    }
+    private List<Button> tableButtons = new ArrayList<>();
+
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        tableButtons.add(button1);
+        tableButtons.add(button2);
+        tableButtons.add(button3);
+        tableButtons.add(button4);
+        tableButtons.add(button5);
+        tableButtons.add(button6);
+        tableButtons.add(button7);
+        tableButtons.add(button8);
+
+        displayUsername();
+        menuTypeList();
+        menuStatusList();
+        menuShowData();
+        empDeparmentList();
+        empPositionList();
+        empShowData();
+        clientShowData();
+        tablesTypeList();
+
+        for (int i = 0; i < tableButtons.size(); i++) {
+            showTableStatus(tableButtons.get(i), i + 1);
+        }
+
+        tablesTypeDish.setOnAction(e -> {
+            String selectedType = String.valueOf(tablesTypeDish.getValue());
+            tablesDishNameList(selectedType);
+        });
+        tablesSpinner();
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("dashboard.fxml"));
+            loader.setController(this);
+            root = loader.load();
+
+            for (Button button : tableButtons) {
+                button.setOnAction(this::tableHandle);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
