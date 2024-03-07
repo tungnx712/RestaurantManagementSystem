@@ -1603,6 +1603,9 @@ public void clientAddBtn() throws SQLException {
         for (int i = 0; i < tableButtons.size(); i++) {
             showTableStatus(tableButtons.get(i), i + 1);
         }
+        resetData();
+
+        showTotalAmount();
     }
 
     public void deleteFromTable(ActionEvent actionEvent) {
@@ -1623,6 +1626,8 @@ public void clientAddBtn() throws SQLException {
         for (int i = 0; i < tableButtons.size(); i++) {
             showTableStatus(tableButtons.get(i), i + 1);
         }
+        resetData();
+        resetOrderAndMoney();
     }
 
     public void showTableOrders() {
@@ -1750,6 +1755,8 @@ public void clientAddBtn() throws SQLException {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        resetData();
+        resetOrderAndMoney();
     }
 
     private void deleteOrdersAndChangeTableStatus() {
@@ -1848,6 +1855,20 @@ public void clientAddBtn() throws SQLException {
             System.out.println(receipt);
         }
     }
+    public void resetData() {
+        tablesTypeDish.getSelectionModel().clearSelection();
+        tablesDishName.getSelectionModel().clearSelection();
+        tablesQuantity.getValueFactory().setValue(0);
+        clientPhone.clear();
+        cashInput.clear();
+    }
+    public void resetOrderAndMoney() {
+        orderTableView.getItems().clear();
+        totalAmount.setText("0");
+        changeLabel.setText("0");
+    }
+
+
     private List<Button> tableButtons = new ArrayList<>();
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -1892,6 +1913,4 @@ public void clientAddBtn() throws SQLException {
             e.printStackTrace();
         }
     }
-
-
 }
