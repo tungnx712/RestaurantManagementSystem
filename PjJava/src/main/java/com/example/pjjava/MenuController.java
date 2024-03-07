@@ -13,6 +13,8 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
@@ -26,6 +28,7 @@ import javafx.stage.StageStyle;
 import java.io.File;
 import java.net.URL;
 import java.sql.*;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
@@ -97,7 +100,7 @@ public class MenuController implements Initializable {
     private Label dashboardNOC;
 
     @FXML
-    private BarChart<?, ?> dashboardNOCChart;
+    private LineChart<?, ?> dashboardNOCChart;
 
     @FXML
     private Label dashboardTodayIncome;
@@ -314,27 +317,48 @@ public class MenuController implements Initializable {
     private ResultSet resultSet;
     private Image image;
 
-    public void dashboardDisplayNC() {
 
-        String sql = "SELECT COUNT(client_ID) AS client_count FROM client";
+public void dashboardDisplayNC() {
+    Date date = new Date();
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(date);
+    int year = calendar.get(Calendar.YEAR);
+    int month = calendar.get(Calendar.MONTH) + 1;
 
-        connection = JDBCConnect.getJDBCConnection();
 
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
+    calendar.set(Calendar.DAY_OF_MONTH, 1);
+    java.sql.Date startDate = new java.sql.Date(calendar.getTimeInMillis());
 
-            while (resultSet.next()) {
-                int total = resultSet.getInt("client_count");
-                dashboardNOC.setText(String.valueOf(total));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+    java.sql.Date endDate = new java.sql.Date(calendar.getTimeInMillis());
+
+    String sql = "SELECT SUM(total_price) AS totalprice FROM bill WHERE bill_date BETWEEN ? AND ?";
+
+    connection = JDBCConnect.getJDBCConnection();
+
+    try {
+        preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setDate(1, startDate);
+        preparedStatement.setDate(2, endDate);
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        if (resultSet.next()) {
+            double ti = resultSet.getDouble("totalprice");
+            DecimalFormat decimalFormat = new DecimalFormat("#,###.##");
+            String formattedIncome = decimalFormat.format(ti);
+            dashboardNOC.setText(formattedIncome + " VNĐ");
         }
+
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+}
 
 
-    public void dashboardDisplayTI(){
+
+
+    public void dashboardDisplayTI() {
         Date date = new Date();
         java.sql.Date sqlDate = new java.sql.Date(date.getTime());
 
@@ -346,33 +370,80 @@ public class MenuController implements Initializable {
         try {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
-            if (resultSet.next()){
-               double ti = resultSet.getDouble("totalprice");
-                dashboardTodayIncome.setText("$"+ti);
+            if (resultSet.next()) {
+                double ti = resultSet.getDouble("totalprice");
+                DecimalFormat decimalFormat = new DecimalFormat("#,###.##");
+                String formattedIncome = decimalFormat.format(ti);
+                dashboardTodayIncome.setText(formattedIncome+" VNĐ");
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void dashboardDisplayTotalIncome(){
+    public void dashboardDisplayTotalIncome() {
 
-        String sql  = "SELECT SUM(total_price) AS totalprice FROM bill";
+        String sql = "SELECT SUM(total_price) AS totalprice FROM bill";
         connection = JDBCConnect.getJDBCConnection();
 
         try {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
-            if (resultSet.next()){
-               double ti = resultSet.getDouble("totalprice");
-               dashboardTotalIncome.setText("$" + ti);
+            if (resultSet.next()) {
+                double ti = resultSet.getDouble("totalprice");
+                DecimalFormat decimalFormat = new DecimalFormat("#,###.##");
+                String formattedIncome = decimalFormat.format(ti);
+                dashboardTotalIncome.setText(formattedIncome+" VNĐ");
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    public void dashboardIncomeChart() {
+        dashboardICChart.getData().clear();
+        String sql = "SELECT bill_date, SUM(total_price)  FROM bill GROUP BY bill_date ORDER BY TIMESTAMP(bill_date)";
+        connection = JDBCConnect.getJDBCConnection();
+        XYChart.Series chart = new XYChart.Series();
+
+        try {
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                chart.getData().add(new XYChart.Data<>(resultSet.getString(1), resultSet.getDouble(2)));
+
+            }
+                dashboardICChart.getData().add(chart);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void dashboardBillChart(){
+        dashboardNOCChart.getData().clear();
+        String sql = "SELECT bill_date, COUNT(bill_ID)  FROM bill GROUP BY bill_date ORDER BY TIMESTAMP(bill_date)";
+        connection = JDBCConnect.getJDBCConnection();
+        XYChart.Series chart = new XYChart.Series();
+
+        try {
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                chart.getData().add(new XYChart.Data<>(resultSet.getString(1), resultSet.getInt(2)));
+
+            }
+            dashboardNOCChart.getData().add(chart);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void menuAddBtn() throws SQLException {
         if (menuitems_dishName.getText().isEmpty()
@@ -409,6 +480,7 @@ public class MenuController implements Initializable {
                             + "VALUES(?,?,?,?,?,?)";
 
                     PreparedStatement preparedStatementDish = connection.prepareStatement(sqlDish);
+
                     preparedStatementDish.setString(1, menuitems_dishName.getText());
                     preparedStatementDish.setString(2, (String) menuitems_status.getSelectionModel().getSelectedItem());
                     preparedStatementDish.setDouble(3, Double.parseDouble(menuitems_price.getText()));
@@ -1391,6 +1463,8 @@ public class MenuController implements Initializable {
             dashboardDisplayNC();
             dashboardDisplayTI();
             dashboardDisplayTotalIncome();
+            dashboardIncomeChart();
+            dashboardBillChart();
 
             dashboardBtn.setStyle("-fx-background-color: #eaa649;\n" +
                     "    -fx-text-fill: #fff;\n" +
@@ -1568,6 +1642,19 @@ public class MenuController implements Initializable {
         }
         return true;
     }
+    private boolean validateStock(){
+        String phoneNumber = menuitems_stock.getText().trim();
+        if (!Pattern.compile("^0\\d+$").matcher(phoneNumber).matches()) {
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please enter numbers in the stock box.");
+            alert.showAndWait();
+            return false;
+        }
+        return true;
+    }
+
 
 
     @Override
@@ -1584,5 +1671,7 @@ public class MenuController implements Initializable {
         dashboardDisplayNC();
         dashboardDisplayTI();
         dashboardDisplayTotalIncome();
+        dashboardIncomeChart();
+        dashboardBillChart();
     }
 }
