@@ -2,6 +2,7 @@ package com.example.pjjava;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.List;
 
 public class Receipt {
     private String clientName;
@@ -9,23 +10,16 @@ public class Receipt {
     private String clientDob;
     private Date date;
     private int tableId;
-    private String dishName;
-    private int quantity;
-    private double dishPrice;
+    private List<ReceiptItem> receiptItems;
     private double total;
 
-    public Receipt(String clientName, String phone, Date dob, LocalDate now, int tableId, String dishName, int quantity, double dishPrice, double total) {
-    }
-
-    public Receipt(String clientName, String clientPhone, String clientDob, Date date, int tableId, String dishName, int quantity, double dishPrice, double total) {
+    public Receipt(String clientName, String clientPhone, String clientDob, Date date, int tableId, List<ReceiptItem> receiptItems, double total) {
         this.clientName = clientName;
         this.clientPhone = clientPhone;
         this.clientDob = clientDob;
         this.date = date;
         this.tableId = tableId;
-        this.dishName = dishName;
-        this.quantity = quantity;
-        this.dishPrice = dishPrice;
+        this.receiptItems = receiptItems;
         this.total = total;
     }
 
@@ -69,28 +63,12 @@ public class Receipt {
         this.tableId = tableId;
     }
 
-    public String getDishName() {
-        return dishName;
+    public List<ReceiptItem> getReceiptItems() {
+        return receiptItems;
     }
 
-    public void setDishName(String dishName) {
-        this.dishName = dishName;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public double getDishPrice() {
-        return dishPrice;
-    }
-
-    public void setDishPrice(double dishPrice) {
-        this.dishPrice = dishPrice;
+    public void setReceiptItems(List<ReceiptItem> receiptItems) {
+        this.receiptItems = receiptItems;
     }
 
     public double getTotal() {
@@ -100,17 +78,32 @@ public class Receipt {
     public void setTotal(double total) {
         this.total = total;
     }
+
     @Override
     public String toString() {
-        return "\n\n\t\tReceipt" +
-                "\nClient: " + clientName +
-                "\nPhone: " + clientPhone +
-                "\nD.O.B: " + clientDob +
-                "\nDate: " + date +
-                "\nTable: " + tableId +
-                "\nDish: " + dishName +
-                "\tQuantity: " + quantity +
-                "\tDish Price: " + dishPrice +
-                "\n\tTOTAL: " + total;
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\n\t\tReceipt");
+        sb.append("\nClient: ").append(clientName);
+        sb.append("\nPhone: ").append(clientPhone);
+        sb.append("\nD.O.B: ").append(clientDob);
+        sb.append("\nDate: ").append(date);
+        sb.append("\nTable: ").append(tableId);
+
+        sb.append("\n\t\t|-----------------|-----------------|-----------------|");
+        sb.append("\n\t\t|      Dish       |    Quantity     |    Dish Price   |");
+        sb.append("\n\t\t|-----------------|-----------------|-----------------|");
+
+        for (ReceiptItem item : receiptItems) {
+            sb.append("\n\t\t| ");
+            sb.append(String.format("%-16s", item.getDishName()));
+            sb.append("| ");
+            sb.append(String.format("%-16s", item.getQuantity()));
+            sb.append("| ");
+            sb.append(String.format("%-16s", item.getPrice()));
+            sb.append("|");
+        }
+        sb.append("\n\t\t|-----------------|-----------------|-----------------|");
+        sb.append("\n\t\t|-----------------|-----------------|TOTAL: ").append(total);
+        return sb.toString();
     }
 }

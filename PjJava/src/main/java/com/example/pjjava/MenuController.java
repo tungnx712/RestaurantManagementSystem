@@ -1604,7 +1604,6 @@ public void clientAddBtn() throws SQLException {
             showTableStatus(tableButtons.get(i), i + 1);
         }
         resetData();
-
         showTotalAmount();
     }
 
@@ -1815,7 +1814,7 @@ public void clientAddBtn() throws SQLException {
         Date dob = null;
 
         try (Connection conn = JDBCConnect.getJDBCConnection();
-             PreparedStatement pstmt = conn.prepareStatement("SELECT client_name,phone, dob FROM client WHERE client_ID = ?")) {
+             PreparedStatement pstmt = conn.prepareStatement("SELECT client_name, phone, dob FROM client WHERE client_ID = ?")) {
             pstmt.setInt(1, clientId);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -1824,34 +1823,48 @@ public void clientAddBtn() throws SQLException {
                 dob = rs.getDate("dob");
             } else {
                 System.out.println("Client not found with ID: " + clientId);
+                return;
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            return;
         }
 
-        List<Receipt> receipts = new ArrayList<>();
+        Map<Integer, List<ReceiptItem>> tableReceipts = new HashMap<>();
 
         try (Connection conn = JDBCConnect.getJDBCConnection();
-             PreparedStatement pstmt = conn.prepareStatement("SELECT o.dish_name, o.quantity, d.price * o.quantity AS amount " +
+             PreparedStatement pstmt = conn.prepareStatement("SELECT o.table_id, o.dish_name, o.quantity, d.price * o.quantity AS amount " +
                      "FROM orders o " +
                      "JOIN dish d ON o.dish_name = d.dish_name " +
                      "WHERE o.table_id = ?")) {
             pstmt.setInt(1, getTableId());
             ResultSet dishRs = pstmt.executeQuery();
-            double total = 0;
             while (dishRs.next()) {
+                int tableId = dishRs.getInt("table_id");
                 String dishName = dishRs.getString("dish_name");
                 int quantity = dishRs.getInt("quantity");
                 double dishPrice = dishRs.getDouble("amount");
-                total += dishPrice;
-                Receipt receipt = new Receipt(clientName, phone, String.valueOf(dob), new Date(), getTableId(), dishName, quantity, dishPrice, total);
-                receipts.add(receipt);
+
+                if (!tableReceipts.containsKey(tableId)) {
+                    tableReceipts.put(tableId, new ArrayList<>());
+                }
+
+                tableReceipts.get(tableId).add(new ReceiptItem(dishName, quantity, dishPrice));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
-        for (Receipt receipt : receipts) {
+        for (Map.Entry<Integer, List<ReceiptItem>> entry : tableReceipts.entrySet()) {
+            int tableId = entry.getKey();
+            List<ReceiptItem> items = entry.getValue();
+
+            double total = 0;
+            for (ReceiptItem item : items) {
+                total += item.getAmount();
+            }
+
+            Receipt receipt = new Receipt(clientName, phone, String.valueOf(dob), new Date(), tableId, items, total);
             System.out.println(receipt);
         }
     }
