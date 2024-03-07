@@ -1,14 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import de.jensd.fx.glyphs.fontawesome.*?>
-<?import java.lang.*?>
-<?import javafx.scene.chart.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import java.lang.String?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Pagination?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="690.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.pjjava.MenuController">
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="690.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.pjjava.MenuController">
     <children>
         <AnchorPane fx:id="mainForm" prefHeight="200.0" prefWidth="200.0">
             <children>
@@ -120,7 +133,7 @@
                                                 <String fx:value="shadow" />
                                             </styleClass>
                                             <children>
-                                                <AnchorPane layoutX="14.0" layoutY="6.0" prefHeight="174.0" prefWidth="238.0" styleClass="card" stylesheets="@dashboard.css">
+                                                <AnchorPane layoutX="302.0" layoutY="6.0" prefHeight="174.0" prefWidth="238.0" styleClass="card" stylesheets="@dashboard.css">
                                                     <children>
                                                         <FontAwesomeIconView fill="WHITE" glyphName="MONEY" layoutX="14.0" layoutY="97.0" size="5em" />
                                                         <Label layoutX="62.0" layoutY="132.0" text="Month's Income" textFill="WHITE">
@@ -129,21 +142,6 @@
                                                             </font>
                                                         </Label>
                                                         <Label fx:id="dashboardNOC" alignment="CENTER_RIGHT" layoutX="5.0" layoutY="14.0" prefHeight="32.0" prefWidth="213.0" text="0 VNĐ" textAlignment="RIGHT" textFill="WHITE">
-                                                            <font>
-                                                                <Font size="18.0" />
-                                                            </font>
-                                                        </Label>
-                                                    </children>
-                                                </AnchorPane>
-                                                <AnchorPane layoutX="301.0" layoutY="6.0" prefHeight="174.0" prefWidth="238.0" styleClass="card" stylesheets="@dashboard.css">
-                                                    <children>
-                                                        <FontAwesomeIconView fill="WHITE" glyphName="MONEY" layoutX="14.0" layoutY="97.0" size="5em" />
-                                                        <Label layoutX="65.0" layoutY="130.0" text="Today's Income" textFill="WHITE">
-                                                            <font>
-                                                                <Font name="System Bold" size="15.0" />
-                                                            </font>
-                                                        </Label>
-                                                        <Label fx:id="dashboardTodayIncome" alignment="CENTER_RIGHT" layoutX="27.0" layoutY="14.0" prefHeight="32.0" prefWidth="202.0" text="0 VNĐ" textFill="WHITE">
                                                             <font>
                                                                 <Font size="18.0" />
                                                             </font>
@@ -159,6 +157,21 @@
                                                             </font>
                                                         </Label>
                                                         <Label fx:id="dashboardTotalIncome" alignment="CENTER_RIGHT" layoutX="6.0" layoutY="14.0" prefHeight="32.0" prefWidth="218.0" text="0 VNĐ" textFill="WHITE">
+                                                            <font>
+                                                                <Font size="18.0" />
+                                                            </font>
+                                                        </Label>
+                                                    </children>
+                                                </AnchorPane>
+                                                <AnchorPane layoutX="14.0" layoutY="6.0" prefHeight="174.0" prefWidth="238.0" styleClass="card" stylesheets="@dashboard.css">
+                                                    <children>
+                                                        <FontAwesomeIconView fill="WHITE" glyphName="MONEY" layoutX="14.0" layoutY="97.0" size="5em" />
+                                                        <Label layoutX="65.0" layoutY="130.0" text="Today's Income" textFill="WHITE">
+                                                            <font>
+                                                                <Font name="System Bold" size="15.0" />
+                                                            </font>
+                                                        </Label>
+                                                        <Label fx:id="dashboardTodayIncome" alignment="CENTER_RIGHT" layoutX="27.0" layoutY="14.0" prefHeight="32.0" prefWidth="202.0" text="0 VNĐ" textFill="WHITE">
                                                             <font>
                                                                 <Font size="18.0" />
                                                             </font>
