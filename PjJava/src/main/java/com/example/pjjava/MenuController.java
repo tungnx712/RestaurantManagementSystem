@@ -12,6 +12,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
@@ -27,11 +29,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.Date;
-
+import java.util.regex.Pattern;
 
 public class MenuController implements Initializable {
     @FXML
@@ -99,7 +102,7 @@ public class MenuController implements Initializable {
     @FXML
     private AnchorPane abc;
     @FXML
-    private BarChart<?, ?> dashboardNOCChart;
+    private LineChart<String, Number> dashboardNOCChart;
 
     @FXML
     private Label dashboardTodayIncome;
@@ -358,6 +361,31 @@ public class MenuController implements Initializable {
     private Image image;
     private Parent root;
 
+    private boolean validatePhoneNumber() {
+        String phoneNumber = clients_phonenumber.getText().trim();
+        if (!Pattern.compile("^0\\d{9}$").matcher(phoneNumber).matches()) {
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Phone number must start with '0' and be 10 digits long.");
+            alert.showAndWait();
+            return false;
+        }
+        return true;
+    }
+    private boolean validateStock(){
+        String phoneNumber = menuitems_stock.getText().trim();
+        if (!Pattern.compile("^0\\d+$").matcher(phoneNumber).matches()) {
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Please enter numbers in the stock box.");
+            alert.showAndWait();
+            return false;
+        }
+        return true;
+    }
+
 
     public void menuAddBtn() throws SQLException {
         if (menuitems_dishName.getText().isEmpty()
@@ -394,6 +422,7 @@ public class MenuController implements Initializable {
                             + "VALUES(?,?,?,?,?,?)";
 
                     PreparedStatement preparedStatementDish = connection.prepareStatement(sqlDish);
+
                     preparedStatementDish.setString(1, menuitems_dishName.getText());
                     preparedStatementDish.setString(2, (String) menuitems_status.getSelectionModel().getSelectedItem());
                     preparedStatementDish.setDouble(3, Double.parseDouble(menuitems_price.getText()));
@@ -599,12 +628,57 @@ public class MenuController implements Initializable {
         }
     }
 
+    private final int itemPerPage = 10;
+
+    private void updateMenuPagination(int pageIndex) {
+        int fromIndex = pageIndex * itemPerPage;
+        int toIndex = Math.min(fromIndex + itemPerPage, menuListData.size());
+
+        menu_tableView.getItems().clear();
+        menu_tableView.getItems().addAll(menuListData.subList(fromIndex, toIndex));
+
+    }
+
+    private void menuUpdatePagiantion(FilteredList<DishData> filteredList) {
+        int totalDish = filteredList.size();
+        int pageCount = (totalDish + itemPerPage - 1) / itemPerPage;
+
+        if (pageCount == 0) {
+            pageCount = 1;
+        }
+
+        menu_pagination.setPageCount(pageCount);
+        if (menu_pagination.getCurrentPageIndex() >= pageCount) {
+            menu_pagination.setCurrentPageIndex(pageCount - 1);
+        }
+
+        int fromIndex = menu_pagination.getCurrentPageIndex() * itemPerPage;
+        int toIndex = Math.min(fromIndex + itemPerPage, totalDish);
+
+        SortedList<DishData> sortedList = new SortedList<>(filteredList);
+        sortedList.comparatorProperty().bind(menu_tableView.comparatorProperty());
+        menu_tableView.setItems(FXCollections.observableArrayList(sortedList.subList(fromIndex, toIndex)));
+
+    }
+
+    private void menuPagination() {
+        int totalPages = (menuListData.size() / itemPerPage) + (menuListData.size() % itemPerPage > 0 ? 1 : 0);
+        menu_pagination.setPageCount(totalPages);
+        menu_pagination.currentPageIndexProperty().addListener((observableValue, oldValue, newValue) -> {
+            updateMenuPagination(newValue.intValue());
+        });
+    }
+
     public ObservableList<DishData> menuDataList() {
         ObservableList<DishData> listData = FXCollections.observableArrayList();
+//        String sql = "SELECT dish.dish_ID, dish.dish_name, dish.price, dish.made_price, dish.availability, dish.stock, dish.image_link, types.type_name " +
+//                "FROM dish " +
+//                "JOIN types_dish ON dish.dish_ID = types_dish.dish_ID " +
+//                "JOIN types ON types_dish.type_ID = types.type_ID";
         String sql = "SELECT dish.dish_ID, dish.dish_name, dish.price, dish.made_price, dish.availability, dish.stock, dish.image_link, types.type_name " +
                 "FROM dish " +
                 "JOIN types_dish ON dish.dish_ID = types_dish.dish_ID " +
-                "JOIN types ON types_dish.type_ID = types.type_ID";
+                "JOIN types ON types_dish.type_ID = types.type_ID ";
 
 
         connection = JDBCConnect.getJDBCConnection();
@@ -635,6 +709,7 @@ public class MenuController implements Initializable {
     }
 
     private ObservableList<DishData> menuListData;
+
     public void menuShowData() {
         menuListData = menuDataList();
 
@@ -650,22 +725,22 @@ public class MenuController implements Initializable {
 
 
         FilteredList<DishData> filteredDish = new FilteredList<>(menuListData, b -> true);
-        menuSearch.textProperty().addListener((observable, oldValue, newValue) ->{
+        menuSearch.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredDish.setPredicate(dishData -> {
 
-                if (newValue.isEmpty() || newValue.isBlank() || newValue == null){
+                if (newValue.isEmpty() || newValue.isBlank() || newValue == null) {
                     return true;
                 }
 
                 String searchKeyWord = newValue.toLowerCase();
 
-                if (dishData.getDish_name().toLowerCase().indexOf(searchKeyWord) > -1){
+                if (dishData.getDish_name().toLowerCase().indexOf(searchKeyWord) > -1) {
                     return true;
-                } else if (dishData.getType_name().toLowerCase().indexOf(searchKeyWord) > -1){
+                } else if (dishData.getType_name().toLowerCase().indexOf(searchKeyWord) > -1) {
                     return true;
                 } else if (dishData.getPrice().toString().indexOf(searchKeyWord) > -1) {
                     return true;
-                } else if (dishData.getMade_price().toString().indexOf(searchKeyWord) > -1){
+                } else if (dishData.getMade_price().toString().indexOf(searchKeyWord) > -1) {
                     return true;
                 } else if (dishData.getStock().toString().indexOf(searchKeyWord) > -1) {
                     return true;
@@ -675,7 +750,6 @@ public class MenuController implements Initializable {
                     return false;
 
             });
-
         });
 
         SortedList<DishData> sortedList = new SortedList<>(filteredDish);
@@ -695,6 +769,8 @@ public class MenuController implements Initializable {
         menuitems_stock.setText(String.valueOf(dishData.getStock()));
         menuitems_price.setText(String.valueOf(dishData.getPrice()));
         menuitems_madePrice.setText(String.valueOf(dishData.getMade_price()));
+//        menuitems_status.setValue(dishData.getAvailability());
+//        menuitems_type.setValue(dishData.getType_name());
         data.id = dishData.getDish_ID();
         data.path = dishData.getImage_link();
 
@@ -703,7 +779,7 @@ public class MenuController implements Initializable {
         menuitems_imageview.setImage(image);
     }
 
-//    EMPLOYESS
+//    EMPLOYEES
 
     public void empAddBtn() throws SQLException {
         if (employees_name.getText().isEmpty()
@@ -942,22 +1018,22 @@ public class MenuController implements Initializable {
 
 
         FilteredList<EmployeesData> filteredEmp = new FilteredList<>(empListData, b -> true);
-        clients_search.textProperty().addListener((observable, oldValue, newValue) ->{
+        clients_search.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredEmp.setPredicate(employeesData -> {
 
-                if (newValue.isEmpty() || newValue.isBlank() || newValue == null){
+                if (newValue.isEmpty() || newValue.isBlank() || newValue == null) {
                     return true;
                 }
 
                 String searchKeyWord = newValue.toLowerCase();
 
-                if (employeesData.getEmp_name().toLowerCase().indexOf(searchKeyWord) > -1){
+                if (employeesData.getEmp_name().toLowerCase().indexOf(searchKeyWord) > -1) {
                     return true;
-                } else if (employeesData.getPosition().toLowerCase().indexOf(searchKeyWord) > -1){
+                } else if (employeesData.getPosition().toLowerCase().indexOf(searchKeyWord) > -1) {
                     return true;
                 } else if (employeesData.getDepartment().toLowerCase().indexOf(searchKeyWord) > -1) {
                     return true;
-                } else if (employeesData.getSalary().toString().indexOf(searchKeyWord) > -1){
+                } else if (employeesData.getSalary().toString().indexOf(searchKeyWord) > -1) {
                     return true;
                 } else
                     return false;
@@ -980,6 +1056,8 @@ public class MenuController implements Initializable {
 
         employees_name.setText(employeesData.getEmp_name());
         employees_salary.setText(String.valueOf(employeesData.getSalary()));
+//        employees_department.setValue(employeesData.getDepartment());
+//        employees_pos.setValue(employeesData.getPosition());
 
         data.id = employeesData.getEmp_ID();
         data.path = employeesData.getImage();
@@ -989,47 +1067,48 @@ public class MenuController implements Initializable {
         employees_imageview.setImage(image);
     }
 
-//  CLIENT
-public void clientAddBtn() throws SQLException {
-    if (clients_customers.getText().isEmpty() || clients_phonenumber.getText().isEmpty()){
+    //  CLIENT
+    public void clientAddBtn() throws SQLException {
+        if (clients_customers.getText().isEmpty() || clients_phonenumber.getText().isEmpty()) {
 
-        alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error Message");
-        alert.setHeaderText(null);
-        alert.setContentText("Please fill all blank fields");
-        alert.showAndWait();
-
-    } else {
-        String insertClients = "INSERT INTO client"
-                + "(client_name, phone,dob)"
-                + "VALUES(?,?,?)";
-        connection = JDBCConnect.getJDBCConnection();
-        try {
-            preparedStatement = connection.prepareStatement(insertClients);
-            preparedStatement.setString(1, clients_customers.getText());
-            preparedStatement.setString(2, clients_phonenumber.getText());
-
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
-            java.util.Date date = simpleDateFormat.parse(clients_dob.getText());
-            java.sql.Date sqlDate = new java.sql.Date(date.getTime());
-            preparedStatement.setString(3, String.valueOf(sqlDate));
-
-            preparedStatement.executeUpdate();
-
-            alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Information Message");
+            alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error Message");
             alert.setHeaderText(null);
-            alert.setContentText("Successfully Added!");
+            alert.setContentText("Please fill all blank fields");
             alert.showAndWait();
-            clientShowData();
-            clientClearBtn();
 
+        } else {
+            String insertClients = "INSERT INTO client"
+                    + "(client_name, phone,dob)"
+                    + "VALUES(?,?,?)";
+            connection = JDBCConnect.getJDBCConnection();
+            try {
+                if (validatePhoneNumber()) {
+                    preparedStatement = connection.prepareStatement(insertClients);
+                    preparedStatement.setString(1, clients_customers.getText());
+                    preparedStatement.setString(2, clients_phonenumber.getText());
 
-        } catch (Exception e) {
-            e.printStackTrace();
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+                    java.util.Date date = simpleDateFormat.parse(clients_dob.getText());
+                    java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+                    preparedStatement.setString(3, String.valueOf(sqlDate));
+
+                    preparedStatement.executeUpdate();
+
+                    alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Information Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Successfully Added!");
+                    alert.showAndWait();
+                    clientShowData();
+                    clientClearBtn();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
-}
 
     public void clientUpdateBtn() throws SQLException {
         if (clients_customers.getText().isEmpty()
@@ -1045,49 +1124,51 @@ public void clientAddBtn() throws SQLException {
         } else {
 
 
-
             String updateClients = "UPDATE client SET client_name = ?, phone = ?, dob = ? WHERE client_ID = " + data.id;
 
             connection = JDBCConnect.getJDBCConnection();
 
             try {
-
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure want to Update Employees: " + employees_name.getText() + "?");
-                Optional<ButtonType> optional = alert.showAndWait();
-
-                if (optional.get().equals(ButtonType.OK)) {
-
-                    preparedStatement = connection.prepareStatement(updateClients);
-                    preparedStatement.setString(1, clients_customers.getText());
-                    preparedStatement.setString(2, clients_phonenumber.getText());
-
-                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
-                    java.util.Date date = simpleDateFormat.parse(clients_dob.getText());
-                    java.sql.Date sqlDate = new java.sql.Date(date.getTime());
-                    preparedStatement.setString(3, String.valueOf(sqlDate));
-
-                    preparedStatement.executeUpdate();
-
-
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
+                if (validatePhoneNumber()) {
+                    alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Confirmation Message");
                     alert.setHeaderText(null);
-                    alert.setContentText("Successfully Update");
-                    alert.showAndWait();
+                    alert.setContentText("Are you sure want to Update Employees: " + clients_customers.getText() + "?");
+                    Optional<ButtonType> optional = alert.showAndWait();
 
-                    clientShowData();
-                    clientClearBtn();
+                    if (optional.get().equals(ButtonType.OK)) {
 
-                } else {
-                    alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Updae Faile!");
-                    alert.showAndWait();
+                        preparedStatement = connection.prepareStatement(updateClients);
+                        preparedStatement.setString(1, clients_customers.getText());
+                        preparedStatement.setString(2, clients_phonenumber.getText());
+
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+                        java.util.Date date = simpleDateFormat.parse(clients_dob.getText());
+                        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+                        preparedStatement.setString(3, String.valueOf(sqlDate));
+
+                        preparedStatement.executeUpdate();
+
+
+                        alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Information Message");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Successfully Update");
+                        alert.showAndWait();
+
+                        clientShowData();
+                        clientClearBtn();
+
+                    } else {
+                        alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error Message");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Updae Faile!");
+                        alert.showAndWait();
+                    }
+
                 }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -1196,18 +1277,18 @@ public void clientAddBtn() throws SQLException {
         client_tableView.setItems(clientListData);
 
         FilteredList<ClientData> filteredList = new FilteredList<>(clientListData, b -> true);
-        clients_search.textProperty().addListener((observable, oldValue, newValue) ->{
+        clients_search.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredList.setPredicate(clientData -> {
 
-                if (newValue.isEmpty() || newValue.isBlank() || newValue == null){
+                if (newValue.isEmpty() || newValue.isBlank() || newValue == null) {
                     return true;
                 }
 
                 String searchKeyWord = newValue.toLowerCase();
 
-                if (clientData.getClient_name().toLowerCase().indexOf(searchKeyWord) > -1){
+                if (clientData.getClient_name().toLowerCase().indexOf(searchKeyWord) > -1) {
                     return true;
-                } else if (clientData.getPhone().toLowerCase().indexOf(searchKeyWord) > -1){
+                } else if (clientData.getPhone().toLowerCase().indexOf(searchKeyWord) > -1) {
                     return true;
                 } else if (clientData.getDob().toString().indexOf(searchKeyWord) > -1) {
                     return true;
@@ -1236,9 +1317,6 @@ public void clientAddBtn() throws SQLException {
         clients_dob.setText(String.valueOf(clientData.getDob()));
 
         data.id = clientData.getClient_ID();
-
-
-
 
     }
 
@@ -1337,6 +1415,13 @@ public void clientAddBtn() throws SQLException {
             clientsBtn.setStyle("-fx-background-color: transparent;\n" +
                     "    -fx-text-fill: #000;\n" +
                     "    -fx-border-width: 1px;");
+
+
+            dashboardDisplayNC();
+            dashboardDisplayTI();
+            dashboardDisplayTotalIncome();
+            dashboardIncomeChart();
+            dashboardBillChart();
 
         } else if (event.getSource() == tablesBtn) {
             tablesForm.setVisible(true);
@@ -1529,6 +1614,7 @@ public void clientAddBtn() throws SQLException {
 
     // TABLES SPINNER
     private SpinnerValueFactory<Integer> spinner;
+
     public void tablesSpinner() {
         spinner = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 50, 0);
         tablesQuantity.setValueFactory(spinner);
@@ -1536,6 +1622,7 @@ public void clientAddBtn() throws SQLException {
 
     // TABLES QUANTITY
     private int qty;
+
     public void tablesQuantity() {
         qty = tablesQuantity.getValue();
         System.out.println(qty);
@@ -1575,11 +1662,13 @@ public void clientAddBtn() throws SQLException {
             System.out.println("Button ID is null or empty.");
         }
     }
+
     private int tableId;
 
-    private void setTableId (int tableId) {
+    private void setTableId(int tableId) {
         this.tableId = tableId;
     }
+
     private int getTableId() {
         return tableId;
     }
@@ -1655,6 +1744,7 @@ public void clientAddBtn() throws SQLException {
         orderTableView.setItems(orderItems);
         System.out.println(orderItems);
     }
+
     public void changeTableStatus(int tableId, String newStatus) {
         try (Connection conn = JDBCConnect.getJDBCConnection();
              PreparedStatement pstmt = conn.prepareStatement("UPDATE tables SET status = ? WHERE table_ID = ?")) {
@@ -1671,6 +1761,7 @@ public void clientAddBtn() throws SQLException {
             e.printStackTrace();
         }
     }
+
     @FXML
     private Label totalAmount;
 
@@ -1700,8 +1791,10 @@ public void clientAddBtn() throws SQLException {
 
         return totalAmount;
     }
+
     @FXML
     private TextField clientPhone;
+
     public int getClientId() {
         int clientId = -1;
         String clientPhoneText = clientPhone.getText();
@@ -1780,6 +1873,7 @@ public void clientAddBtn() throws SQLException {
     private TextField cashInput;
     @FXML
     private Label changeLabel;
+
     @FXML
     private void calculateChange(ActionEvent event) {
         try {
@@ -1868,6 +1962,7 @@ public void clientAddBtn() throws SQLException {
             System.out.println(receipt);
         }
     }
+
     public void resetData() {
         tablesTypeDish.getSelectionModel().clearSelection();
         tablesDishName.getSelectionModel().clearSelection();
@@ -1875,10 +1970,142 @@ public void clientAddBtn() throws SQLException {
         clientPhone.clear();
         cashInput.clear();
     }
+
     public void resetOrderAndMoney() {
         orderTableView.getItems().clear();
         totalAmount.setText("0");
         changeLabel.setText("0");
+    }
+
+
+    // DASHBOARD DISPLAY NC
+    public void dashboardDisplayNC() {
+        Date date = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH) + 1; // Tháng bắt đầu từ 0 nên cần cộng thêm 1
+
+        // Tạo ngày đầu tiên của tháng
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        java.sql.Date startDate = new java.sql.Date(calendar.getTimeInMillis());
+
+        // Tạo ngày cuối cùng của tháng
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+        java.sql.Date endDate = new java.sql.Date(calendar.getTimeInMillis());
+
+        String sql = "SELECT SUM(total_price) AS totalprice FROM bill WHERE bill_date BETWEEN ? AND ?";
+
+        connection = JDBCConnect.getJDBCConnection();
+
+        try {
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setDate(1, startDate);
+            preparedStatement.setDate(2, endDate);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                double ti = resultSet.getDouble("totalprice");
+                DecimalFormat decimalFormat = new DecimalFormat("#,###.##");
+                String formattedIncome = decimalFormat.format(ti);
+                dashboardNOC.setText(formattedIncome + " VNĐ");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    // DASHBOARD DISPLAY TI
+    public void dashboardDisplayTI() {
+        Date date = new Date();
+        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+
+        String sql = "SELECT SUM(total_price) AS totalprice FROM bill WHERE bill_date = '"
+                + sqlDate + "'";
+
+        connection = JDBCConnect.getJDBCConnection();
+
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            if (resultSet.next()) {
+                double ti = resultSet.getDouble("totalprice");
+                DecimalFormat decimalFormat = new DecimalFormat("#,###.##");
+                String formattedIncome = decimalFormat.format(ti);
+                dashboardTodayIncome.setText(formattedIncome + " VNĐ");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // DASHBOARD DISPLAY TOTAL INCOME
+    public void dashboardDisplayTotalIncome() {
+
+        String sql = "SELECT SUM(total_price) AS totalprice FROM bill";
+        connection = JDBCConnect.getJDBCConnection();
+
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            if (resultSet.next()) {
+                double ti = resultSet.getDouble("totalprice");
+                DecimalFormat decimalFormat = new DecimalFormat("#,###.##");
+                String formattedIncome = decimalFormat.format(ti);
+                dashboardTotalIncome.setText(formattedIncome + " VNĐ");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    // DASHBOARD INCOME CHART
+    public void dashboardIncomeChart() {
+        dashboardICChart.getData().clear();
+        String sql = "SELECT bill_date, SUM(total_price)  FROM bill GROUP BY bill_date ORDER BY TIMESTAMP(bill_date)";
+        connection = JDBCConnect.getJDBCConnection();
+        XYChart.Series chart = new XYChart.Series();
+
+        try {
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                chart.getData().add(new XYChart.Data<>(resultSet.getString(1), resultSet.getDouble(2)));
+
+            }
+            dashboardICChart.getData().add(chart);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // DASHBOARD BILL CHART
+    public void dashboardBillChart() {
+        dashboardNOCChart.getData().clear();
+        String sql = "SELECT bill_date, COUNT(bill_ID)  FROM bill GROUP BY bill_date ORDER BY TIMESTAMP(bill_date)";
+        connection = JDBCConnect.getJDBCConnection();
+        XYChart.Series chart = new XYChart.Series();
+
+        try {
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                chart.getData().add(new XYChart.Data<>(resultSet.getString(1), resultSet.getInt(2)));
+
+            }
+            dashboardNOCChart.getData().add(chart);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -1893,6 +2120,12 @@ public void clientAddBtn() throws SQLException {
         tableButtons.add(button6);
         tableButtons.add(button7);
         tableButtons.add(button8);
+
+        dashboardDisplayNC();
+        dashboardDisplayTI();
+        dashboardDisplayTotalIncome();
+        dashboardIncomeChart();
+        dashboardBillChart();
 
         displayUsername();
         menuTypeList();

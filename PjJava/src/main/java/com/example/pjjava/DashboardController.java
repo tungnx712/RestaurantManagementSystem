@@ -12,19 +12,20 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.text.DecimalFormat;
 import java.util.*;
+import java.util.Date;
 
 public class DashboardController implements Initializable {
     @FXML
@@ -57,8 +58,6 @@ public class DashboardController implements Initializable {
     @FXML
     private AnchorPane availableFDForm;
 
-//    @FXML
-//    private TextField availableFDProductID;
 
     @FXML
     private TextField availableFDProductName;
@@ -740,15 +739,13 @@ public class DashboardController implements Initializable {
             preparedStatement.setString(3, (String) orderProductName.getSelectionModel().getSelectedItem());
 
 
-
-
-
         }
         catch (SQLException e)
         {
             System.out.println(e.getMessage());
         }
     }
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
